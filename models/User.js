@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema({
     },
     favorites: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Movie'
+        ref: 'Movie' // Tham chiếu đến model Movie
     }]
 }, {
     timestamps: true

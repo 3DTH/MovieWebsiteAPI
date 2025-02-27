@@ -5,6 +5,7 @@ dotenv.config();
 const express = require("express");
 const connectDB = require("./config/db");
 const movieRoutes = require("./routes/movieRoutes");
+const favoriteRoutes = require('./routes/favoriteRoutes');
 // const userRoutes = require("./routes/userRoutes");
 const authRoutes = require("./routes/authRoutes");
 const { errorHandler }  = require("./middleware/error");
@@ -24,6 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/movies", movieRoutes);
 // app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
+app.use('/api/favorites', favoriteRoutes);
 
 // Error handler
 app.use(errorHandler);

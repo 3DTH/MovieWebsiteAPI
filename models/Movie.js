@@ -42,6 +42,18 @@ const movieSchema = new mongoose.Schema({
         name: String
     }],
     videos: [videoSchema],
+    cast: [{
+        actor: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Actor'
+        },
+        character: String,
+        order: Number
+    }],
+    directors: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Actor'
+    }],
     lastUpdated: {
         type: Date,
         default: Date.now
@@ -49,5 +61,9 @@ const movieSchema = new mongoose.Schema({
 }, {
     timestamps: true
 });
+
+// Index để tăng tốc truy vấn
+movieSchema.index({ tmdbId: 1 });
+movieSchema.index({ title: 'text', overview: 'text' });
 
 module.exports = mongoose.model('Movie', movieSchema); 
