@@ -1,0 +1,79 @@
+d:\Code\DO_AN_MON_HOC\DoAnUngDungMoi_S4\MovieWebsiteAPI\
+├── app/
+│   ├── (auth)/
+│   │   ├── login/
+│   │   │   └── page.tsx
+│   │   ├── register/
+│   │   │   └── page.tsx
+│   │   └── layout.tsx
+│   ├── (dashboard)/
+│   │   ├── movies/
+│   │   │   ├── [id]/
+│   │   │   │   └── page.tsx
+│   │   │   └── page.tsx
+│   │   ├── series/
+│   │   │   ├── [id]/
+│   │   │   │   └── page.tsx
+│   │   │   └── page.tsx
+│   │   ├── watch/
+│   │   │   └── [id]/
+│   │   │       └── page.tsx
+│   │   ├── search/
+│   │   │   └── page.tsx
+│   │   ├── profile/
+│   │   │   └── page.tsx
+│   │   └── layout.tsx
+│   ├── api/
+│   │   ├── auth/
+│   │   │   ├── [...nextauth]/
+│   │   │   │   └── route.ts
+│   │   │   ├── login/
+│   │   │   │   └── route.ts
+│   │   │   └── register/
+│   │   │       └── route.ts
+│   │   └── movies/
+│   │       └── route.ts
+│   ├── favicon.ico
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+├── components/
+│   ├── ui/
+│   │   ├── button.tsx
+│   │   ├── card.tsx
+│   │   ├── input.tsx
+│   │   └── modal.tsx
+│   ├── layout/
+│   │   ├── Header.tsx
+│   │   ├── Footer.tsx
+│   │   └── Sidebar.tsx
+│   ├── movie/
+│   │   ├── MovieCard.tsx
+│   │   ├── MovieList.tsx
+│   │   ├── MovieDetails.tsx
+│   │   └── MoviePlayer.tsx
+│   └── auth/
+│       ├── LoginForm.tsx
+│       └── RegisterForm.tsx
+├── lib/
+│   ├── utils.ts
+│   ├── auth.ts
+│   └── api.ts
+├── hooks/
+│   ├── useAuth.ts
+│   └── useMovies.ts
+├── types/
+│   ├── movie.ts
+│   └── user.ts
+├── public/
+│   ├── images/
+│   │   └── logo.png
+│   └── fonts/
+├── styles/
+│   └── theme.ts
+├── .env.local
+├── .gitignore
+├── next.config.js
+├── package.json
+├── tailwind.config.js
+└── tsconfig.json

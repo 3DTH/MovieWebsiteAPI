@@ -1,0 +1,96 @@
+<svg width="140" height="40" viewBox="0 0 140 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Nền gradient -->
+  <rect width="140" height="40" rx="8" fill="url(#paint0_linear)"/>
+  
+  <!-- Biểu tượng phim 3D -->
+  <g filter="url(#shadow)">
+    <path d="M30 10H10V30H30V10Z" fill="#111111" stroke="#E50914" stroke-width="2"/>
+    <path d="M15 10V30" stroke="#E50914" stroke-width="2"/>
+    <path d="M20 10V30" stroke="#E50914" stroke-width="2"/>
+    <path d="M25 10V30" stroke="#E50914" stroke-width="2"/>
+    <path d="M10 15H30" stroke="#E50914" stroke-width="2"/>
+    <path d="M10 20H30" stroke="#E50914" stroke-width="2"/>
+    <path d="M10 25H30" stroke="#E50914" stroke-width="2"/>
+    
+    <!-- Hiệu ứng 3D cho biểu tượng -->
+    <path d="M32 12V32H12" stroke="#E50914" stroke-width="1" opacity="0.6"/>
+    <path d="M31 11V31H11" stroke="#E50914" stroke-width="1" opacity="0.8"/>
+  </g>
+  
+  <!-- Văn bản "3DFlix" với hiệu ứng 3D -->
+  <g filter="url(#textShadow)">
+    <!-- Số 3 -->
+    <path d="M40 15C42 15 43 15.5 43 17C43 18 42.5 18.5 41.5 19C42.8 19.2 43.5 20 43.5 21.5C43.5 23.5 42 24.5 40 24.5C38 24.5 36.5 23.5 36.5 21.5H38.5C38.5 22.3 39 22.8 40 22.8C41 22.8 41.5 22.3 41.5 21.5C41.5 20.7 41 20.2 40 20.2H39V18.5H40C40.8 18.5 41.2 18 41.2 17.2C41.2 16.4 40.8 15.9 40 15.9C39.2 15.9 38.8 16.4 38.8 17.2H36.8C36.8 15.7 38 15 40 15Z" fill="url(#text_gradient)"/>
+    
+    <!-- Chữ D -->
+    <path d="M45 15H49C51.2 15 53 16.8 53 19V20.5C53 22.7 51.2 24.5 49 24.5H45V15ZM47 17V22.5H49C50.1 22.5 51 21.6 51 20.5V19C51 17.9 50.1 17 49 17H47Z" fill="url(#text_gradient)"/>
+    
+    <!-- Chữ F -->
+    <path d="M55 15H62V17H57V19H61V21H57V24.5H55V15Z" fill="url(#text_gradient)"/>
+    
+    <!-- Chữ L -->
+    <path d="M64 15H66V22.5H71V24.5H64V15Z" fill="url(#text_gradient)"/>
+    
+    <!-- Chữ I -->
+    <path d="M73 15H75V24.5H73V15Z" fill="url(#text_gradient)"/>
+    
+    <!-- Chữ X -->
+    <path d="M77 15H79.5L82 19.5L84.5 15H87L83.5 20.5L87.5 24.5H85L82 20.5L79 24.5H76.5L80.5 20.5L77 15Z" fill="url(#text_gradient)"/>
+  </g>
+  
+  <!-- Hiệu ứng đỏ -->
+  <g filter="url(#glow)">
+    <rect x="95" y="15" width="2" height="13" fill="#E50914"/>
+    <rect x="100" y="15" width="2" height="13" fill="#E50914"/>
+    <path d="M97 19L100 19L100 21L97 21L97 19Z" fill="#E50914"/>
+    <path d="M97 23L100 23L100 25L97 25L97 23Z" fill="#E50914"/>
+  </g>
+  
+  <!-- Hiệu ứng trang trí -->
+  <circle cx="110" cy="20" r="2" fill="#E50914" opacity="0.8">
+    <animate attributeName="opacity" values="0.4;0.8;0.4" dur="2s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="118" cy="20" r="1.5" fill="#E50914" opacity="0.6">
+    <animate attributeName="opacity" values="0.3;0.6;0.3" dur="2.5s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="125" cy="20" r="1" fill="#E50914" opacity="0.4">
+    <animate attributeName="opacity" values="0.2;0.4;0.2" dur="3s" repeatCount="indefinite" />
+  </circle>
+  
+  <!-- Hiệu ứng phim -->
+  <rect x="130" y="12" width="1" height="16" fill="#E50914" opacity="0.7">
+    <animate attributeName="y" values="12;14;12" dur="1.5s" repeatCount="indefinite" />
+  </rect>
+  <rect x="133" y="14" width="1" height="12" fill="#E50914" opacity="0.5">
+    <animate attributeName="y" values="14;12;14" dur="2s" repeatCount="indefinite" />
+  </rect>
+  <rect x="136" y="16" width="1" height="8" fill="#E50914" opacity="0.3">
+    <animate attributeName="y" values="16;15;16" dur="2.5s" repeatCount="indefinite" />
+  </rect>
+  
+  <!-- Định nghĩa gradient và filter -->
+  <defs>
+    <linearGradient id="paint0_linear" x1="0" y1="0" x2="140" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F0F0F"/>
+      <stop offset="1" stop-color="#1A1A1A"/>
+    </linearGradient>
+    
+    <linearGradient id="text_gradient" x1="36.5" y1="15" x2="87.5" y2="24.5" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#CCCCCC"/>
+    </linearGradient>
+    
+    <filter id="shadow" x="8" y="8" width="26" height="26" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="1" dy="1" stdDeviation="1" flood-opacity="0.5" flood-color="#E50914"/>
+    </filter>
+    
+    <filter id="textShadow" x="35" y="14" width="54" height="12" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0.5" dy="0.5" stdDeviation="0.5" flood-opacity="0.7" flood-color="#E50914"/>
+    </filter>
+    
+    <filter id="glow" x="94" y="14" width="9" height="15" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="0.5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+</svg>
