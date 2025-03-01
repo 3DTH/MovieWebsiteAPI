@@ -42,9 +42,9 @@ const Header: React.FC = () => {
   // Navigation items
   const navItems = [
     { name: 'Trang chủ', path: '/' },
-    { name: 'Phim mới', path: '/movies/new' },
-    { name: 'Phim phổ biến', path: '/movies/popular' },
-    { name: 'Phim sắp chiếu', path: '/movies/upcoming' },
+    { name: 'Phim mới', path: '/movies?filter=new' },
+    { name: 'Phim bộ', path: '/movies?filter=series' },
+    { name: 'Phim lẻ', path: '/movies?filter=single' },
     { name: 'Thể loại', path: '/genres' },
   ];
 
