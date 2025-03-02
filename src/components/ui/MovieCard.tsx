@@ -31,6 +31,8 @@ const MovieCard: React.FC<MovieProps> = ({ movie }) => {
             blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgZmlsbD0iIzEyMTIxMiIvPjwvc3ZnPg=="
             className="object-cover transition-transform duration-300 group-hover:scale-110"
             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 20vw"
+            loading="lazy" 
+            priority={false} 
           />
           
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -60,7 +62,7 @@ const MovieCard: React.FC<MovieProps> = ({ movie }) => {
           <div className="flex items-center justify-between mt-2 text-sm">
             <div className="flex items-center text-yellow-500">
               <FiStar className="mr-1" />
-              <span>{movie.rating}</span>
+              <span suppressHydrationWarning>{movie.rating}</span>
             </div>
             
             <div className="flex items-center text-gray-400">

@@ -38,14 +38,24 @@ export default function RegisterPage() {
       >
         {/* Left side - Image and info */}
         <div className="hidden md:block md:w-1/2 relative bg-gray-800">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-600/20 z-10"></div>
-          <Image
-            src="/images/register-background.jpg"
-            alt="Movie background"
-            fill
-            className="object-cover"
-            priority
-          />
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/30 to-purple-600/40 z-10">
+            {/* Decorative elements */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute -top-16 -left-16 w-64 h-64 rounded-full bg-blue-500/20 blur-3xl"></div>
+              <div className="absolute top-1/3 -right-24 w-72 h-72 rounded-full bg-indigo-600/20 blur-3xl"></div>
+              <div className="absolute -bottom-16 left-1/4 w-60 h-60 rounded-full bg-purple-500/20 blur-3xl"></div>
+              
+              {/* Animated elements */}
+              <div className="absolute top-20 right-20 w-2 h-2 bg-white rounded-full animate-pulse"></div>
+              <div className="absolute top-1/2 left-1/4 w-3 h-3 bg-blue-400 rounded-full animate-ping"></div>
+              <div className="absolute bottom-24 right-1/3 w-2 h-2 bg-indigo-300 rounded-full animate-pulse"></div>
+              
+              {/* Geometric shapes */}
+              <div className="absolute top-1/4 left-1/3 w-8 h-8 border border-blue-300/30 rotate-45"></div>
+              <div className="absolute bottom-1/3 right-1/4 w-12 h-12 border border-indigo-300/20 rounded-full"></div>
+            </div>
+          </div>
+          
           <div className="absolute inset-0 flex flex-col justify-center items-center p-12 z-20">
             <motion.div
               initial={{ opacity: 0, y: 20 }}

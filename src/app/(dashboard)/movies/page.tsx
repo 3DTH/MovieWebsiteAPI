@@ -86,14 +86,30 @@ const MoviesPage = () => {
   // Add pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [moviesPerPage] = useState(30);
+  // Thêm các dữ liệu mẫu cho ratings và versions
+  const ratings = [
+    { id: 'p', name: 'P (Mọi lứa tuổi)' },
+    { id: 'k', name: 'K (Dưới 13 tuổi)' },
+    { id: 't13', name: 'T13 (13 tuổi trở lên)' },
+    { id: 't16', name: 'T16 (16 tuổi trở lên)' },
+    { id: 't18', name: 'T18 (18 tuổi trở lên)' },
+  ];
+
+  const versions = [
+    { id: 'sub', name: 'Phụ đề' },
+    { id: 'dub', name: 'Lồng tiếng' },
+    { id: 'thuyetminh_bac', name: 'Thuyết minh giọng Bắc' },
+    { id: 'thuyetminh_nam', name: 'Thuyết minh giọng Nam' },
+  ];
   const [activeFilters, setActiveFilters] = useState({
     genres: [] as string[],
     years: [] as string[],
     countries: [] as string[],
     sort: 'newest',
     type: typeFromUrl || 'all',
+    rating: 'all',
+    version: 'all',
   });
-
   // Effect to handle URL params for type filter
   useEffect(() => {
     if (typeFromUrl) {
@@ -103,7 +119,6 @@ const MoviesPage = () => {
       }));
     }
   }, [typeFromUrl]);
-
   // Effect to apply filters
   useEffect(() => {
     setIsLoading(true);
@@ -177,30 +192,42 @@ const MoviesPage = () => {
     
     return () => clearTimeout(timer);
   }, [activeFilters, movies]);
-
+  // Cập nhật hàm handleFilterChange để phù hợp với cấu trúc mới
   const handleFilterChange = (filters: {
-    genres: string[];
-    years: string[];
-    countries: string[];
+    genres: string;
+    years: string;
+    countries: string;
     sort: string;
     type: string;
+    rating: string;
+    version: string;
   }) => {
-    setActiveFilters(filters);
+    setActiveFilters({
+      genres: filters.genres === 'all' ? [] : [filters.genres],
+      years: filters.years === 'all' ? [] : [filters.years],
+      countries: filters.countries === 'all' ? [] : [filters.countries],
+      sort: filters.sort,
+      type: filters.type,
+      rating: filters.rating,
+      version: filters.version
+    });
   };
-
   // Add function to handle page changes
   const handlePageChange = (pageNumber: number) => {
-    setCurrentPage(pageNumber);
-    // Scroll to top when changing pages
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Only change page if it's different
+    if (pageNumber !== currentPage) {
+      setCurrentPage(pageNumber);
+      // Use requestAnimationFrame for smoother scrolling
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
   };
-
   // Calculate pagination values
   const indexOfLastMovie = currentPage * moviesPerPage;
   const indexOfFirstMovie = indexOfLastMovie - moviesPerPage;
   const currentMovies = filteredMovies.slice(indexOfFirstMovie, indexOfLastMovie);
   const totalPages = Math.ceil(filteredMovies.length / moviesPerPage);
-
   // Modify renderMovies function to use currentMovies instead of filteredMovies
   const renderMovies = () => {
     if (isLoading) {
@@ -210,7 +237,7 @@ const MoviesPage = () => {
         </div>
       );
     }
-
+  
     if (filteredMovies.length === 0) {
       return (
         <div className="text-center py-16">
@@ -219,7 +246,7 @@ const MoviesPage = () => {
         </div>
       );
     }
-
+  
     return (
       <AnimatePresence mode="wait">
         <motion.div
@@ -227,7 +254,7 @@ const MoviesPage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.2 }}
         >
           {viewMode === 'grid' && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
@@ -236,7 +263,7 @@ const MoviesPage = () => {
               ))}
             </div>
           )}
-
+  
           {viewMode === 'list' && (
             <div className="space-y-4">
               {currentMovies.map(movie => (
@@ -244,7 +271,7 @@ const MoviesPage = () => {
               ))}
             </div>
           )}
-
+  
           {viewMode === 'masonry' && (
             <div className="columns-2 sm:columns-3 md:columns-4 gap-4 space-y-4">
               {currentMovies.map(movie => (
@@ -258,11 +285,10 @@ const MoviesPage = () => {
       </AnimatePresence>
     );
   };
-
   // Add pagination component
   const renderPagination = () => {
     if (totalPages <= 1) return null;
-
+  
     return (
       <div className="mt-12 flex justify-center">
         <div className="flex items-center space-x-2">
@@ -279,11 +305,11 @@ const MoviesPage = () => {
               <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
           </button>
-
+  
           {/* Page numbers */}
           {Array.from({ length: Math.min(5, totalPages) }).map((_, index) => {
             let pageNumber;
-            
+  
             // Calculate which page numbers to show
             if (totalPages <= 5) {
               pageNumber = index + 1;
@@ -294,7 +320,7 @@ const MoviesPage = () => {
             } else {
               pageNumber = currentPage - 2 + index;
             }
-            
+  
             // Show ellipsis for large page ranges
             if (totalPages > 5) {
               if (index === 0 && currentPage > 3) {
@@ -327,7 +353,7 @@ const MoviesPage = () => {
                 );
               }
             }
-            
+  
             return (
               <button
                 key={index}
@@ -341,7 +367,7 @@ const MoviesPage = () => {
               </button>
             );
           })}
-
+  
           {/* Next page button */}
           <button
             onClick={() => handlePageChange(currentPage + 1)}
@@ -359,7 +385,6 @@ const MoviesPage = () => {
       </div>
     );
   };
-
   // Update the return statement to include pagination
   return (
     <div className="container mx-auto px-4 py-8">
@@ -394,17 +419,18 @@ const MoviesPage = () => {
           </button>
         </div>
       </div>
-
+  
       <Filter
         types={types}
         genres={genres}
         years={years}
         countries={countries}
+        ratings={ratings}
+        versions={versions}
         sortOptions={sortOptions}
-        selectedType={activeFilters.type}
         onFilterChange={handleFilterChange}
       />
-
+  
       <div className="mb-6">
         <div className="flex flex-wrap gap-2 items-center text-sm">
           <span className="text-gray-400">Kết quả:</span>
@@ -444,12 +470,12 @@ const MoviesPage = () => {
           )}
         </div>
       </div>
-
+  
       {renderMovies()}
-      
+  
       {/* Add pagination */}
       {renderPagination()}
-      
+  
       {/* Add page info */}
       {filteredMovies.length > 0 && (
         <div className="mt-4 text-center text-sm text-gray-400">

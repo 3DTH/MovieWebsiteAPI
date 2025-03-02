@@ -65,17 +65,33 @@ export default function LoginPage() {
             </p>
           </motion.div>
         </motion.div>
-
         {/* Right side - Image and info */}
-        <div className="hidden md:block md:w-1/2 relative bg-gray-800">
-          <div className="absolute inset-0 bg-gradient-to-br from-red-500/20 to-purple-600/20 z-10"></div>
-          <Image
-            src="/images/login-background.jpg"
-            alt="Movie background"
-            fill
-            className="object-cover"
-            priority
-          />
+        <div className="hidden md:block md:w-1/2 relative bg-gradient-to-br from-gray-900 to-black overflow-hidden">
+          {/* Decorative background */}
+          <div className="absolute inset-0">
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-red-600/30 to-purple-700/40"></div>
+            
+            {/* Decorative elements */}
+            <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-red-500/20 blur-3xl"></div>
+            <div className="absolute top-1/3 -left-20 w-80 h-80 rounded-full bg-purple-600/30 blur-3xl"></div>
+            <div className="absolute -bottom-20 right-1/4 w-72 h-72 rounded-full bg-pink-500/20 blur-3xl"></div>
+            
+            {/* Animated particles */}
+            <div className="absolute top-20 left-1/4 w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            <div className="absolute top-1/3 right-1/3 w-3 h-3 bg-red-400 rounded-full animate-ping opacity-75"></div>
+            <div className="absolute bottom-1/4 left-1/3 w-2 h-2 bg-purple-300 rounded-full animate-pulse"></div>
+            
+            {/* Decorative shapes */}
+            <div className="absolute top-1/4 right-1/4 w-12 h-12 border border-red-300/30 rounded-full"></div>
+            <div className="absolute bottom-1/3 left-1/4 w-8 h-8 border border-purple-300/30 rotate-45 transform"></div>
+            <div className="absolute top-2/3 right-1/3 w-16 h-16 border-2 border-pink-300/20 rounded-full"></div>
+            
+            {/* Light beams */}
+            <div className="absolute top-0 left-1/2 w-1 h-40 bg-gradient-to-b from-red-500/40 to-transparent transform -rotate-45"></div>
+            <div className="absolute bottom-0 right-1/3 w-1 h-40 bg-gradient-to-t from-purple-500/40 to-transparent transform rotate-45"></div>
+          </div>
+          
           <div className="absolute inset-0 flex flex-col justify-center items-center p-12 z-20">
             <motion.div
               initial={{ opacity: 0, y: 20 }}

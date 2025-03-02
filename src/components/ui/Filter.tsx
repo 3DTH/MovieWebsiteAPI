@@ -1,28 +1,30 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FiFilter, FiChevronDown, FiX, FiCheck } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiFilter, FiChevronDown, FiArrowRight } from 'react-icons/fi';
 
 interface FilterOption {
   id: string;
   name: string;
 }
 
-// Cập nhật interface để thêm types
 interface FilterProps {
   types: FilterOption[];
   genres: FilterOption[];
   years: FilterOption[];
   countries: FilterOption[];
+  ratings: FilterOption[];
+  versions: FilterOption[];
   sortOptions: FilterOption[];
-  selectedType?: string;
   onFilterChange: (filters: {
-    genres: string[];
-    years: string[];
-    countries: string[];
+    genres: string;
+    years: string;
+    countries: string;
     sort: string;
     type: string;
+    rating: string;
+    version: string;
   }) => void;
 }
 
@@ -31,313 +33,261 @@ const Filter: React.FC<FilterProps> = ({
   genres,
   years,
   countries,
+  ratings,
+  versions,
   sortOptions,
-  selectedType = 'all',
   onFilterChange,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-  const [selectedYears, setSelectedYears] = useState<string[]>([]);
-  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
-  const [selectedSort, setSelectedSort] = useState<string>(sortOptions[0]?.id || '');
-  const [selectedMovieType, setSelectedMovieType] = useState<string>(selectedType);
+  const [selectedGenre, setSelectedGenre] = useState<string>('all');
+  const [selectedYear, setSelectedYear] = useState<string>('all');
+  const [selectedCountry, setSelectedCountry] = useState<string>('all');
+  const [selectedSort, setSelectedSort] = useState<string>(sortOptions[0]?.id || 'newest');
+  const [selectedType, setSelectedType] = useState<string>('all');
+  const [selectedRating, setSelectedRating] = useState<string>('all');
+  const [selectedVersion, setSelectedVersion] = useState<string>('all');
   
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const toggleFilter = () => {
+    setIsExpanded(!isExpanded);
+  };
   
-  // Cập nhật selectedMovieType khi prop thay đổi
-  useEffect(() => {
-    setSelectedMovieType(selectedType);
-  }, [selectedType]);
-  
-  const toggleDropdown = (dropdown: string) => {
-    if (activeDropdown === dropdown) {
-      setActiveDropdown(null);
-    } else {
-      setActiveDropdown(dropdown);
+  const handleFilterChange = (filterType: string, value: string) => {
+    switch (filterType) {
+      case 'genre':
+        setSelectedGenre(value);
+        break;
+      case 'year':
+        setSelectedYear(value);
+        break;
+      case 'country':
+        setSelectedCountry(value);
+        break;
+      case 'sort':
+        setSelectedSort(value);
+        break;
+      case 'type':
+        setSelectedType(value);
+        break;
+      case 'rating':
+        setSelectedRating(value);
+        break;
+      case 'version':
+        setSelectedVersion(value);
+        break;
+      default:
+        break;
     }
   };
-  const handleGenreChange = (genreId: string) => {
-    setSelectedGenres(prev => {
-      if (prev.includes(genreId)) {
-        return prev.filter(id => id !== genreId);
-      } else {
-        return [...prev, genreId];
-      }
-    });
-  };
-  const handleYearChange = (yearId: string) => {
-    setSelectedYears(prev => {
-      if (prev.includes(yearId)) {
-        return prev.filter(id => id !== yearId);
-      } else {
-        return [...prev, yearId];
-      }
-    });
-  };
-  const handleCountryChange = (countryId: string) => {
-    setSelectedCountries(prev => {
-      if (prev.includes(countryId)) {
-        return prev.filter(id => id !== countryId);
-      } else {
-        return [...prev, countryId];
-      }
-    });
-  };
-  const handleSortChange = (sortId: string) => {
-    setSelectedSort(sortId);
-    setActiveDropdown(null);
-  };
-  // Thêm hàm xử lý thay đổi loại phim
-  const handleTypeChange = (typeId: string) => {
-    setSelectedMovieType(typeId);
-    setActiveDropdown(null);
-    applyFilters(selectedGenres, selectedYears, selectedCountries, selectedSort, typeId);
-  };
-  // Thêm hàm resetFilters
-  const resetFilters = () => {
-    setSelectedGenres([]);
-    setSelectedYears([]);
-    setSelectedCountries([]);
-    setSelectedSort(sortOptions[0]?.id || '');
-    // Không reset selectedMovieType để giữ lại loại phim hiện tại
-    
-    applyFilters([], [], [], sortOptions[0]?.id || '', selectedMovieType);
-  };
-  // Cập nhật hàm applyFilters để bao gồm type
-  const applyFilters = (
-    genres: string[] = selectedGenres,
-    years: string[] = selectedYears,
-    countries: string[] = selectedCountries,
-    sort: string = selectedSort,
-    type: string = selectedMovieType
-  ) => {
+  
+  const applyFilters = () => {
     onFilterChange({
-      genres,
-      years,
-      countries,
-      sort,
-      type,
+      genres: selectedGenre,
+      years: selectedYear,
+      countries: selectedCountry,
+      sort: selectedSort,
+      type: selectedType,
+      rating: selectedRating,
+      version: selectedVersion
     });
   };
+  
+  const closeFilter = () => {
+    setIsExpanded(false);
+  };
+  
   return (
-    <div className="bg-gray-900 rounded-lg shadow-lg mb-8">
-      {/* Filter Header */}
+    <div className="v-filter mb-6">
+      {/* Filter Toggle Button */}
       <div 
-        className="p-4 flex items-center justify-between cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
+        className={`filter-toggle flex items-center justify-center space-x-2 p-3 bg-gray-800 rounded-lg cursor-pointer ${isExpanded ? 'toggled' : ''}`}
+        onClick={toggleFilter}
       >
-        <div className="flex items-center">
-          <FiFilter className="text-red-500 mr-2" />
-          <h3 className="text-white font-medium">Bộ lọc</h3>
-        </div>
-        <FiChevronDown 
-          className={`text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
-        />
+        <FiFilter className="text-yellow-500" />
+        <span className="text-white font-medium">Bộ lọc</span>
+        <FiChevronDown className={`text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
       </div>
       
-      {/* Filter Content */}
-      <motion.div
-        initial={false}
-        animate={{ height: isExpanded ? 'auto' : 0, opacity: isExpanded ? 1 : 0 }}
-        transition={{ duration: 0.3 }}
-        className="overflow-hidden"
-      >
-        <div className="p-4 border-t border-gray-800">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            {/* Movie Type Filter */}
-            <div className="relative">
-              <button
-                className="w-full p-3 bg-gray-800 rounded-lg text-left flex items-center justify-between"
-                onClick={() => toggleDropdown('types')}
-              >
-                <span className="text-gray-300">
-                  {types.find(t => t.id === selectedMovieType)?.name || 'Loại phim'}
-                </span>
-                <FiChevronDown className={`transition-transform ${activeDropdown === 'types' ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {activeDropdown === 'types' && (
-                <div className="absolute z-10 mt-2 w-full bg-gray-800 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  <div className="p-2">
-                    {types.map((type) => (
-                      <button
-                        key={type.id}
-                        className={`w-full text-left p-2 rounded-md flex items-center ${
-                          selectedMovieType === type.id ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700'
-                        }`}
-                        onClick={() => handleTypeChange(type.id)}
-                      >
-                        <span className="ml-2">{type.name}</span>
-                        {selectedMovieType === type.id && (
-                          <FiCheck className="ml-auto" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
+      {/* Filter Elements */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="filter-elements bg-gray-800 mt-2 rounded-lg p-4 overflow-hidden"
+          >
+            {/* Countries */}
+            <div className="fe-row flex flex-col md:flex-row border-b border-gray-700 pb-4 mb-4">
+              <div className="fe-name text-gray-400 w-full md:w-32 mb-2 md:mb-0">Quốc gia:</div>
+              <div className="fe-results flex flex-wrap gap-2">
+                <div 
+                  className={`item px-3 py-1.5 rounded-full cursor-pointer ${selectedCountry === 'all' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                  onClick={() => handleFilterChange('country', 'all')}
+                >
+                  Tất cả
                 </div>
-              )}
+                {countries.map((country) => (
+                  <div 
+                    key={country.id}
+                    className={`item px-3 py-1.5 rounded-full cursor-pointer ${selectedCountry === country.id ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                    onClick={() => handleFilterChange('country', country.id)}
+                  >
+                    {country.name}
+                  </div>
+                ))}
+              </div>
             </div>
             
-            {/* Genres Filter */}
-            <div className="relative">
-              <button
-                className="w-full p-3 bg-gray-800 rounded-lg text-left flex items-center justify-between"
-                onClick={() => toggleDropdown('genres')}
-              >
-                <span className="text-gray-300">
-                  {selectedGenres.length > 0 
-                    ? `Thể loại (${selectedGenres.length})` 
-                    : 'Thể loại'}
-                </span>
-                <FiChevronDown className={`transition-transform ${activeDropdown === 'genres' ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {activeDropdown === 'genres' && (
-                <div className="absolute z-10 mt-2 w-full bg-gray-800 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  <div className="p-2">
-                    {genres.map((genre) => (
-                      <button
-                        key={genre.id}
-                        className={`w-full text-left p-2 rounded-md flex items-center ${
-                          selectedGenres.includes(genre.id) ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700'
-                        }`}
-                        onClick={() => handleGenreChange(genre.id)}
-                      >
-                        <span className="ml-2">{genre.name}</span>
-                        {selectedGenres.includes(genre.id) && (
-                          <FiCheck className="ml-auto" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
+            {/* Types */}
+            <div className="fe-row flex flex-col md:flex-row border-b border-gray-700 pb-4 mb-4">
+              <div className="fe-name text-gray-400 w-full md:w-32 mb-2 md:mb-0">Loại phim:</div>
+              <div className="fe-results flex flex-wrap gap-2">
+                <div 
+                  className={`item px-3 py-1.5 rounded-full cursor-pointer ${selectedType === 'all' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                  onClick={() => handleFilterChange('type', 'all')}
+                >
+                  Tất cả
                 </div>
-              )}
+                {types.map((type) => (
+                  <div 
+                    key={type.id}
+                    className={`item px-3 py-1.5 rounded-full cursor-pointer ${selectedType === type.id ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                    onClick={() => handleFilterChange('type', type.id)}
+                  >
+                    {type.name}
+                  </div>
+                ))}
+              </div>
             </div>
             
-            {/* Years Filter */}
-            <div className="relative">
-              <button
-                className="w-full p-3 bg-gray-800 rounded-lg text-left flex items-center justify-between"
-                onClick={() => toggleDropdown('years')}
-              >
-                <span className="text-gray-300">
-                  {selectedYears.length > 0 
-                    ? `Năm (${selectedYears.length})` 
-                    : 'Năm'}
-                </span>
-                <FiChevronDown className={`transition-transform ${activeDropdown === 'years' ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {activeDropdown === 'years' && (
-                <div className="absolute z-10 mt-2 w-full bg-gray-800 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  <div className="p-2">
-                    {years.map((year) => (
-                      <button
-                        key={year.id}
-                        className={`w-full text-left p-2 rounded-md flex items-center ${
-                          selectedYears.includes(year.id) ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700'
-                        }`}
-                        onClick={() => handleYearChange(year.id)}
-                      >
-                        <span className="ml-2">{year.name}</span>
-                        {selectedYears.includes(year.id) && (
-                          <FiCheck className="ml-auto" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
+            {/* Ratings */}
+            <div className="fe-row flex flex-col md:flex-row border-b border-gray-700 pb-4 mb-4">
+              <div className="fe-name text-gray-400 w-full md:w-32 mb-2 md:mb-0">Xếp hạng:</div>
+              <div className="fe-results flex flex-wrap gap-2">
+                <div 
+                  className={`item px-3 py-1.5 rounded-full cursor-pointer ${selectedRating === 'all' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                  onClick={() => handleFilterChange('rating', 'all')}
+                >
+                  Tất cả
                 </div>
-              )}
+                {ratings.map((rating) => (
+                  <div 
+                    key={rating.id}
+                    className={`item px-3 py-1.5 rounded-full cursor-pointer ${selectedRating === rating.id ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                    onClick={() => handleFilterChange('rating', rating.id)}
+                  >
+                    {rating.name}
+                  </div>
+                ))}
+              </div>
             </div>
             
-            {/* Countries Filter */}
-            <div className="relative">
-              <button
-                className="w-full p-3 bg-gray-800 rounded-lg text-left flex items-center justify-between"
-                onClick={() => toggleDropdown('countries')}
-              >
-                <span className="text-gray-300">
-                  {selectedCountries.length > 0 
-                    ? `Quốc gia (${selectedCountries.length})` 
-                    : 'Quốc gia'}
-                </span>
-                <FiChevronDown className={`transition-transform ${activeDropdown === 'countries' ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {activeDropdown === 'countries' && (
-                <div className="absolute z-10 mt-2 w-full bg-gray-800 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  <div className="p-2">
-                    {countries.map((country) => (
-                      <button
-                        key={country.id}
-                        className={`w-full text-left p-2 rounded-md flex items-center ${
-                          selectedCountries.includes(country.id) ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700'
-                        }`}
-                        onClick={() => handleCountryChange(country.id)}
-                      >
-                        <span className="ml-2">{country.name}</span>
-                        {selectedCountries.includes(country.id) && (
-                          <FiCheck className="ml-auto" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
+            {/* Genres */}
+            <div className="fe-row flex flex-col md:flex-row border-b border-gray-700 pb-4 mb-4">
+              <div className="fe-name text-gray-400 w-full md:w-32 mb-2 md:mb-0">Thể loại:</div>
+              <div className="fe-results flex flex-wrap gap-2">
+                <div 
+                  className={`item px-3 py-1.5 rounded-full cursor-pointer ${selectedGenre === 'all' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                  onClick={() => handleFilterChange('genre', 'all')}
+                >
+                  Tất cả
                 </div>
-              )}
+                {genres.map((genre) => (
+                  <div 
+                    key={genre.id}
+                    className={`item px-3 py-1.5 rounded-full cursor-pointer ${selectedGenre === genre.id ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                    onClick={() => handleFilterChange('genre', genre.id)}
+                  >
+                    {genre.name}
+                  </div>
+                ))}
+              </div>
             </div>
             
-            {/* Sort Options */}
-            <div className="relative">
-              <button
-                className="w-full p-3 bg-gray-800 rounded-lg text-left flex items-center justify-between"
-                onClick={() => toggleDropdown('sort')}
-              >
-                <span className="text-gray-300">
-                  {sortOptions.find(o => o.id === selectedSort)?.name || 'Sắp xếp theo'}
-                </span>
-                <FiChevronDown className={`transition-transform ${activeDropdown === 'sort' ? 'rotate-180' : ''}`} />
-              </button>
-              
-              {activeDropdown === 'sort' && (
-                <div className="absolute z-10 mt-2 w-full bg-gray-800 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  <div className="p-2">
-                    {sortOptions.map((option) => (
-                      <button
-                        key={option.id}
-                        className={`w-full text-left p-2 rounded-md flex items-center ${
-                          selectedSort === option.id ? 'bg-red-600 text-white' : 'text-gray-300 hover:bg-gray-700'
-                        }`}
-                        onClick={() => handleSortChange(option.id)}
-                      >
-                        <span className="ml-2">{option.name}</span>
-                        {selectedSort === option.id && (
-                          <FiCheck className="ml-auto" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
+            {/* Versions */}
+            <div className="fe-row flex flex-col md:flex-row border-b border-gray-700 pb-4 mb-4">
+              <div className="fe-name text-gray-400 w-full md:w-32 mb-2 md:mb-0">Phiên bản:</div>
+              <div className="fe-results flex flex-wrap gap-2">
+                <div 
+                  className={`item px-3 py-1.5 rounded-full cursor-pointer ${selectedVersion === 'all' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                  onClick={() => handleFilterChange('version', 'all')}
+                >
+                  Tất cả
                 </div>
-              )}
+                {versions.map((version) => (
+                  <div 
+                    key={version.id}
+                    className={`item px-3 py-1.5 rounded-full cursor-pointer ${selectedVersion === version.id ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                    onClick={() => handleFilterChange('version', version.id)}
+                  >
+                    {version.name}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-          
-          {/* Filter Actions */}
-          <div className="mt-6 flex justify-end space-x-4">
-            <button
-              onClick={resetFilters}
-              className="px-4 py-2 text-gray-300 hover:text-white transition-colors"
-            >
-              Đặt lại
-            </button>
-            <button
-              onClick={() => applyFilters()}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-            >
-              Áp dụng
-            </button>
-          </div>
-        </div>
-      </motion.div>
+            
+            {/* Years */}
+            <div className="fe-row flex flex-col md:flex-row border-b border-gray-700 pb-4 mb-4">
+              <div className="fe-name text-gray-400 w-full md:w-32 mb-2 md:mb-0">Năm sản xuất:</div>
+              <div className="fe-results flex flex-wrap gap-2">
+                <div 
+                  className={`item px-3 py-1.5 rounded-full cursor-pointer ${selectedYear === 'all' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                  onClick={() => handleFilterChange('year', 'all')}
+                >
+                  Tất cả
+                </div>
+                {years.map((year) => (
+                  <div 
+                    key={year.id}
+                    className={`item px-3 py-1.5 rounded-full cursor-pointer ${selectedYear === year.id ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                    onClick={() => handleFilterChange('year', year.id)}
+                  >
+                    {year.name}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Sort */}
+            <div className="fe-row flex flex-col md:flex-row border-b border-gray-700 pb-4 mb-4">
+              <div className="fe-name text-gray-400 w-full md:w-32 mb-2 md:mb-0">Sắp xếp:</div>
+              <div className="fe-results flex flex-wrap gap-2">
+                {sortOptions.map((sort) => (
+                  <div 
+                    key={sort.id}
+                    className={`item px-3 py-1.5 rounded-full cursor-pointer ${selectedSort === sort.id ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                    onClick={() => handleFilterChange('sort', sort.id)}
+                  >
+                    {sort.name}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Buttons */}
+            <div className="fe-row fe-row-end flex flex-col md:flex-row">
+              <div className="fe-name text-gray-400 w-full md:w-32 mb-2 md:mb-0">&nbsp;</div>
+              <div className="fe-buttons flex space-x-3">
+                <button 
+                  type="button" 
+                  className="btn btn-rounded bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full flex items-center"
+                  onClick={applyFilters}
+                >
+                  Lọc kết quả <FiArrowRight className="ml-2" />
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-rounded bg-transparent border border-gray-600 text-gray-300 hover:text-white px-6 py-2 rounded-full"
+                  onClick={closeFilter}
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -45,7 +45,7 @@ const Header: React.FC = () => {
     { name: 'Phim mới', path: '/movies?filter=new' },
     { name: 'Phim bộ', path: '/movies?filter=series' },
     { name: 'Phim lẻ', path: '/movies?filter=single' },
-    { name: 'Thể loại', path: '/genres' },
+    { name: 'Diễn viên', path: '/actors' },
   ];
 
   return (
