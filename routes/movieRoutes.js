@@ -1,27 +1,30 @@
 const express = require('express');
 const router = express.Router();
+const { protect, authorize } = require('../middleware/auth');
 const {
     syncMovies,
     getMovies,
-    initialSync,
     getMovieDetails,
     searchMovies,
-    addComment,
-    getMovieComments,
-    migrateMovieActors
+    migrateMovieActors,
+    deleteMovie
 } = require('../controllers/movieController');
-const protect = require('../middleware/auth');
+const commentRouter = require('./commentRoutes');
 
 // Public routes
 router.get('/search', searchMovies);
-// router.get('/initial-sync', initialSync);
 router.get('/', getMovies);
 router.get('/:id', getMovieDetails);
 
-// Protected routes
-router.post('/sync', protect, syncMovies);
-router.post('/migrate-movie', protect, migrateMovieActors);
-router.post('/:id/comments', protect, addComment);
-router.get('/:id/comments', getMovieComments);
+// Protected routes (yêu cầu đăng nhập)
+router.use(protect);
+
+// Admin routes
+router.post('/sync', authorize('admin'), syncMovies);
+router.post('/migrate-actors', authorize('admin'), migrateMovieActors);
+router.delete('/:id', authorize('admin'), deleteMovie);
+
+// Re-route vào comment routes
+router.use('/:movieId/comments', commentRouter);
 
 module.exports = router; 

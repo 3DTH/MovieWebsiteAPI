@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const moment = require('moment-timezone');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
@@ -20,12 +21,30 @@ const userSchema = new mongoose.Schema({
         minlength: 6,
         select: false
     },
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
+    role: {
+        type: String,
+        enum: ['user', 'admin'],
+        default: 'user'
+    },
     favorites: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Movie' // Tham chiếu đến model Movie
     }]
 }, {
-    timestamps: true
+    timestamps: true,
+    toJSON: { 
+        transform: function(doc, ret) {
+            // Chuyển đổi múi giờ sang Asia/Ho_Chi_Minh
+            ret.createdAt = moment(ret.createdAt).tz('Asia/Ho_Chi_Minh').format();
+            ret.updatedAt = moment(ret.updatedAt).tz('Asia/Ho_Chi_Minh').format();
+            return ret;
+        }
+    }
 });
 
 // Mã hóa mật khẩu trước khi lưu

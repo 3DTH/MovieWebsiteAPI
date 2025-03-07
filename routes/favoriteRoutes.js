@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
+const { protect } = require('../middleware/auth');
 const {
     addToFavorites,
     removeFromFavorites,
     getFavorites
 } = require('../controllers/favoriteController');
-const protect = require('../middleware/auth');
 
-// Tất cả routes đều cần đăng nhập
+// Tất cả routes yêu cầu đăng nhập
 router.use(protect);
 
 router.get('/', getFavorites);

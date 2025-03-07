@@ -6,11 +6,14 @@ const express = require("express");
 const connectDB = require("./config/db");
 const movieRoutes = require("./routes/movieRoutes");
 const favoriteRoutes = require('./routes/favoriteRoutes');
-// const userRoutes = require("./routes/userRoutes");
+const userRoutes = require("./routes/userRoutes");
 const authRoutes = require("./routes/authRoutes");
 const { errorHandler }  = require("./middleware/error");
-const cron = require('node-cron');
 const { syncMovies } = require('./controllers/movieController');
+const cron = require('node-cron');
+const actorRoutes = require('./routes/actorRoutes');
+const passport = require('passport');
+require('./config/passport');
 
 // Connect to database
 connectDB();
@@ -23,9 +26,13 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use("/api/movies", movieRoutes);
-// app.use("/api/users", userRoutes);
+app.use("/api/actors", actorRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use('/api/favorites', favoriteRoutes);
+
+// Thêm middleware passport
+app.use(passport.initialize());
 
 // Error handler
 app.use(errorHandler);

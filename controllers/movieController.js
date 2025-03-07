@@ -3,6 +3,7 @@ const tmdbApi = require('../utils/tmdb');
 const { ErrorResponse } = require('../middleware/error');
 const Comment = require('../models/Comment');
 const Actor = require('../models/Actor');
+const User = require('../models/User');
 
 // Cập nhật danh sách phim từ TMDB
 exports.syncMovies = async (req, res, next) => {
@@ -95,17 +96,20 @@ exports.getMovies = async (req, res, next) => {
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
 
-        const movies = await Movie.find()
-            .sort({ popularity: -1 })
-            .skip(skip)
-            .limit(limit);
-
-        const total = await Movie.countDocuments();
+        const [movies, total] = await Promise.all([
+            Movie.find()
+                .sort({ popularity: -1 })
+                .skip(skip)
+                .limit(limit),
+            Movie.countDocuments()
+        ]);
 
         res.json({
             success: true,
             count: movies.length,
             total,
+            totalPages: Math.ceil(total / limit),
+            currentPage: page,
             data: movies
         });
     } catch (error) {
@@ -119,42 +123,12 @@ exports.getMovieDetails = async (req, res, next) => {
         const { id } = req.params;
         console.log('Đang tìm phim với ID:', id);
         
-        // Kiểm tra trong DB trước
-        let movie = await Movie.findOne({ tmdbId: Number(id) });
-        
-        if (!movie || movie.videos.length === 0) {
-            console.log('Không tìm thấy phim hoặc không có videos, đang lấy từ TMDB API...');
-            const movieDetails = await tmdbApi.getMovieDetails(id);
-            
-            if (!movie) {
-                // Tạo mới nếu chưa có phim
-                movie = await Movie.create({
-                    tmdbId: movieDetails.id,
-                    title: movieDetails.title,
-                    originalTitle: movieDetails.original_title,
-                    overview: movieDetails.overview,
-                    posterPath: movieDetails.poster_path,
-                    backdropPath: movieDetails.backdrop_path,
-                    releaseDate: movieDetails.release_date,
-                    voteAverage: movieDetails.vote_average,
-                    voteCount: movieDetails.vote_count,
-                    popularity: movieDetails.popularity,
-                    genres: movieDetails.genres,
-                    videos: movieDetails.videos,
-                    lastUpdated: new Date()
-                });
-            } else {
-                // Cập nhật videos nếu phim đã tồn tại
-                movie = await Movie.findOneAndUpdate(
-                    { tmdbId: Number(id) },
-                    { 
-                        videos: movieDetails.videos,
-                        lastUpdated: new Date()
-                    },
-                    { new: true }
-                );
-            }
-            console.log('Đã cập nhật phim với videos:', movie.videos);
+        const movie = await Movie.findOne({ tmdbId: id })
+            .populate('cast.actor', 'name profilePath')
+            .populate('directors', 'name profilePath');
+
+        if (!movie) {
+            return next(new ErrorResponse('Không tìm thấy phim', 404));
         }
 
         res.json({
@@ -223,86 +197,6 @@ exports.getMovieDetails = async (req, res, next) => {
 //         next(error);
 //     }
 // }; 
-
-// Thêm bình luận
-exports.addComment = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const { comment } = req.body;
-
-        if (!comment) {
-            return next(new ErrorResponse('Vui lòng nhập nội dung bình luận', 400));
-        }
-
-        // Tìm phim
-        const movie = await Movie.findOne({ tmdbId: id });
-        if (!movie) {
-            return next(new ErrorResponse('Không tìm thấy phim', 404));
-        }
-
-        // Kiểm tra user đã bình luận chưa
-        const existingComment = await Comment.findOne({
-            movie: movie._id,
-            user: req.user.id
-        });
-
-        if (existingComment) {
-            return next(new ErrorResponse('Bạn đã bình luận phim này rồi', 400));
-        }
-
-        // Tạo bình luận mới
-        const newComment = await Comment.create({
-            movie: movie._id,
-            user: req.user.id,
-            comment
-        });
-
-        // Populate thông tin user
-        await newComment.populate('user', 'username');
-
-        res.status(201).json({
-            success: true,
-            data: newComment
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
-// Lấy danh sách bình luận của phim
-exports.getMovieComments = async (req, res, next) => {
-    try {
-        const { id } = req.params;
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
-
-        const movie = await Movie.findOne({ tmdbId: id });
-        if (!movie) {
-            return next(new ErrorResponse('Không tìm thấy phim', 404));
-        }
-
-        const [comments, total] = await Promise.all([
-            Comment.find({ movie: movie._id })
-                .populate('user', 'username')
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit),
-            Comment.countDocuments({ movie: movie._id })
-        ]);
-
-        res.json({
-            success: true,
-            count: comments.length,
-            total,
-            totalPages: Math.ceil(total / limit),
-            currentPage: page,
-            data: comments
-        });
-    } catch (error) {
-        next(error);
-    }
-};
 
 // Tìm kiếm phim
 exports.searchMovies = async (req, res, next) => {
@@ -437,6 +331,44 @@ exports.migrateMovieActors = async (req, res, next) => {
         res.json({
             success: true,
             message: `Đã cập nhật ${movies.length} phim và diễn viên thành công`
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Xóa phim
+exports.deleteMovie = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        // Tìm phim bằng tmdbId
+        const movie = await Movie.findOne({ tmdbId: id });
+        if (!movie) {
+            return next(new ErrorResponse('Không tìm thấy phim', 404));
+        }
+
+        // Xóa tất cả comments của phim
+        await Comment.deleteMany({ movie: movie._id });
+
+        // Xóa phim khỏi danh sách yêu thích của users
+        await User.updateMany(
+            { favorites: movie._id },
+            { $pull: { favorites: movie._id } }
+        );
+
+        // Xóa phim khỏi danh sách phim của actors
+        await Actor.updateMany(
+            { 'movies.movie': movie._id },
+            { $pull: { movies: { movie: movie._id } } }
+        );
+
+        // Xóa phim
+        await Movie.deleteOne({ _id: movie._id });
+
+        res.json({
+            success: true,
+            data: {}
         });
     } catch (error) {
         next(error);

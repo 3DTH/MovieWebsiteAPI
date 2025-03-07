@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const moment = require('moment-timezone');
 
 const actorSchema = new mongoose.Schema({
     tmdbId: {
@@ -24,7 +25,15 @@ const actorSchema = new mongoose.Schema({
         order: Number
     }]
 }, {
-    timestamps: true
+    timestamps: true,
+    toJSON: { 
+        transform: function(doc, ret) {
+            // Chuyển đổi múi giờ sang Asia/Ho_Chi_Minh
+            ret.createdAt = moment(ret.createdAt).tz('Asia/Ho_Chi_Minh').format();
+            ret.updatedAt = moment(ret.updatedAt).tz('Asia/Ho_Chi_Minh').format();
+            return ret;
+        }
+    }
 });
 
 actorSchema.index({ tmdbId: 1 });
