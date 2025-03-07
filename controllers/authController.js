@@ -100,4 +100,26 @@ exports.googleCallback = (req, res, next) => {
         // Redirect về frontend với token
         res.redirect(`${process.env.FRONTEND_URL}/login?token=${token.token}`);
     })(req, res, next);
-}; 
+};
+
+// Facebook OAuth routes
+exports.facebookAuth = passport.authenticate('facebook', {
+    scope: ['email']
+});
+
+exports.facebookCallback = (req, res, next) => {
+    passport.authenticate('facebook', (err, user) => {
+        if (err) {
+            return res.redirect(`${process.env.FRONTEND_URL}/login?error=${encodeURIComponent(err.message)}`);
+        }
+        if (!user) {
+            return res.redirect(`${process.env.FRONTEND_URL}/login?error=${encodeURIComponent('Không thể đăng nhập bằng Facebook')}`);
+        }
+
+        // Tạo JWT token
+        const token = createTokenResponse(user);
+
+        // Redirect về frontend với token
+        res.redirect(`${process.env.FRONTEND_URL}/login?token=${token.token}`);
+    })(req, res, next);
+};
