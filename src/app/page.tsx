@@ -12,169 +12,11 @@ import {
   FiChevronRight,
   FiChevronLeft,
 } from "react-icons/fi";
-
-// Dữ liệu mẫu - sau này sẽ được thay thế bằng dữ liệu từ API
-const featuredMovies = [
-  {
-    id: 1,
-    title: "Dune: Part Two",
-    description:
-      "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
-    posterPath: "/poster1.jpg",
-    backdropPath: "/backdrop1.jpg",
-    rating: 8.5,
-    releaseDate: "2024-03-01",
-    genres: ["Sci-Fi", "Adventure"],
-  },
-  {
-    id: 2,
-    title: "Oppenheimer",
-    description:
-      "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb.",
-    posterPath: "/poster2.jpg",
-    backdropPath: "/backdrop2.jpg",
-    rating: 8.7,
-    releaseDate: "2023-07-21",
-    genres: ["Biography", "Drama", "History"],
-  },
-  {
-    id: 3,
-    title: "Poor Things",
-    description:
-      "The incredible tale about the fantastical evolution of Bella Baxter, a young woman brought back to life by the brilliant and unorthodox scientist Dr. Godwin Baxter.",
-    posterPath: "/poster3.jpg",
-    backdropPath: "/backdrop3.jpg",
-    rating: 8.2,
-    releaseDate: "2023-12-08",
-    genres: ["Romance", "Sci-Fi", "Comedy"],
-  },
-];
-
-const trendingMovies = [
-  {
-    id: 4,
-    title: "The Beekeeper",
-    posterPath: "/poster4.jpg",
-    rating: 7.4,
-  },
-  {
-    id: 5,
-    title: "Madame Web",
-    posterPath: "/poster5.jpg",
-    rating: 5.6,
-  },
-  {
-    id: 6,
-    title: "Argylle",
-    posterPath: "/poster6.jpg",
-    rating: 6.2,
-  },
-  {
-    id: 7,
-    title: "Anyone But You",
-    posterPath: "/poster7.jpg",
-    rating: 7.0,
-  },
-  {
-    id: 8,
-    title: "Bob Marley: One Love",
-    posterPath: "/poster8.jpg",
-    rating: 7.8,
-  },
-  {
-    id: 9,
-    title: "Migration",
-    posterPath: "/poster9.jpg",
-    rating: 7.5,
-  },
-];
-
-const popularMovies = [
-  {
-    id: 10,
-    title: "Barbie",
-    posterPath: "/poster10.jpg",
-    rating: 7.3,
-  },
-  {
-    id: 11,
-    title: "The Super Mario Bros. Movie",
-    posterPath: "/poster11.jpg",
-    rating: 7.1,
-  },
-  {
-    id: 12,
-    title: "Guardians of the Galaxy Vol. 3",
-    posterPath: "/poster12.jpg",
-    rating: 8.0,
-  },
-  {
-    id: 13,
-    title: "Fast X",
-    posterPath: "/poster13.jpg",
-    rating: 6.5,
-  },
-  {
-    id: 14,
-    title: "John Wick: Chapter 4",
-    posterPath: "/poster14.jpg",
-    rating: 8.2,
-  },
-  {
-    id: 15,
-    title: "Spider-Man: Across the Spider-Verse",
-    posterPath: "/poster15.jpg",
-    rating: 8.7,
-  },
-];
-
-const upcomingMovies = [
-  {
-    id: 16,
-    title: "Kingdom of the Planet of the Apes",
-    posterPath: "/poster16.jpg",
-    releaseDate: "2024-05-10",
-  },
-  {
-    id: 17,
-    title: "Furiosa: A Mad Max Saga",
-    posterPath: "/poster17.jpg",
-    releaseDate: "2024-05-24",
-  },
-  {
-    id: 18,
-    title: "Inside Out 2",
-    posterPath: "/poster18.jpg",
-    releaseDate: "2024-06-14",
-  },
-  {
-    id: 19,
-    title: "A Quiet Place: Day One",
-    posterPath: "/poster19.jpg",
-    releaseDate: "2024-06-28",
-  },
-];
-
-const genres = [
-  { id: 28, name: "Hành động", image: "/genre-action.jpg" },
-  { id: 12, name: "Phiêu lưu", image: "/genre-adventure.jpg" },
-  { id: 16, name: "Hoạt hình", image: "/genre-animation.jpg" },
-  { id: 35, name: "Hài", image: "/genre-comedy.jpg" },
-  { id: 80, name: "Tội phạm", image: "/genre-crime.jpg" },
-  { id: 18, name: "Chính kịch", image: "/genre-drama.jpg" },
-  { id: 14, name: "Giả tưởng", image: "/genre-fantasy.jpg" },
-  { id: 27, name: "Kinh dị", image: "/genre-horror.jpg" },
-];
+import { getMovies, Movie } from "./api/movieApi";
 
 // Movie Card Component
 interface MovieCardProps {
-  movie: {
-    id: number;
-    title: string;
-    posterPath: string;
-    rating?: number;
-    releaseDate?: string;
-  };
+  movie: Movie;
 }
 
 const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
@@ -184,10 +26,10 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
       whileTap={{ scale: 0.95 }}
       className="relative group"
     >
-      <Link href={`/movies/${movie.id}`}>
+      <Link href={`/movies/${movie._id}`}>
         <div className="relative aspect-[2/3] rounded-lg overflow-hidden">
           <Image
-            src={movie.posterPath}
+            src={`https://image.tmdb.org/t/p/w500${movie.posterPath}`}
             alt={movie.title}
             fill
             className="object-cover"
@@ -197,10 +39,10 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
           <div className="absolute inset-0 flex flex-col justify-end p-3 opacity-0 group-hover:opacity-100 transition-opacity">
             <h3 className="text-sm font-medium line-clamp-2">{movie.title}</h3>
 
-            {movie.rating && (
+            {movie.voteAverage && (
               <div className="flex items-center mt-1">
                 <FiStar className="text-yellow-500 mr-1 h-3 w-3" />
-                <span className="text-xs">{movie.rating.toFixed(1)}</span>
+                <span className="text-xs">{movie.voteAverage.toFixed(1)}</span>
               </div>
             )}
 
@@ -227,14 +69,67 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
 
 export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [featuredMovies, setFeaturedMovies] = useState<Movie[]>([]);
+  const [popularMovies, setPopularMovies] = useState<Movie[]>([]);
+  const [newMovies, setNewMovies] = useState<Movie[]>([]);
+  const [uniqueGenres, setUniqueGenres] = useState<{id: number, name: string}[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMovies = async () => {
+      try {
+        setLoading(true);
+        const response = await getMovies(1, 50); // Lấy nhiều phim để có dữ liệu lọc
+        
+        if (response.data.success && response.data.data.length > 0) {
+          const allMovies = response.data.data;
+          
+          // Lọc phim phổ biến
+          const popular = allMovies.filter(movie => movie.isPopular === true);
+          setPopularMovies(popular.slice(0, 6));
+          
+          // Lấy 3 phim đầu tiên làm featured movies
+          setFeaturedMovies(allMovies.slice(0, 3));
+          
+          // Lọc phim mới nhất theo ngày phát hành
+          const sortedByDate = [...allMovies].sort((a, b) => 
+            new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
+          );
+          setNewMovies(sortedByDate.slice(0, 6));
+          
+          // Trích xuất tất cả thể loại duy nhất từ các phim
+          const allGenres = allMovies.flatMap(movie => movie.genres);
+          const uniqueGenresMap = new Map();
+          
+          allGenres.forEach(genre => {
+            if (!uniqueGenresMap.has(genre.id)) {
+              uniqueGenresMap.set(genre.id, genre);
+            }
+          });
+          
+          // Chuyển Map thành mảng và lấy tối đa 8 thể loại
+          const genreArray = Array.from(uniqueGenresMap.values());
+          setUniqueGenres(genreArray.slice(0, 8));
+        }
+      } catch (error) {
+        console.error('Error fetching movies:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMovies();
+  }, []);
 
   // Auto-slide effect for hero banner
   useEffect(() => {
+    if (featuredMovies.length === 0) return;
+    
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % featuredMovies.length);
     }, 8000);
     return () => clearInterval(interval);
-  }, []);
+  }, [featuredMovies]);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % featuredMovies.length);
@@ -246,126 +141,140 @@ export default function Home() {
     );
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-red-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen">
       {/* Hero Banner */}
-      <section className="relative h-[70vh] md:h-[80vh] overflow-hidden">
-        {featuredMovies.map((movie, index) => (
-          <div
-            key={movie.id}
-            className={`absolute inset-0 transition-opacity duration-1000 ${
-              index === currentSlide
-                ? "opacity-100"
-                : "opacity-0 pointer-events-none"
-            }`}
-          >
-            {/* Backdrop Image */}
-            <div className="absolute inset-0">
-              <Image
-                src={movie.backdropPath}
-                alt={movie.title}
-                fill
-                priority
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-            </div>
-
-            {/* Content */}
-            <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end pb-16 md:pb-24">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                className="max-w-2xl"
-              >
-                <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-                  {movie.title}
-                </h1>
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="flex items-center">
-                    <FiStar className="text-yellow-500 mr-1" />
-                    <span>{movie.rating.toFixed(1)}</span>
-                  </div>
-                  <span>•</span>
-                  <span>{movie.releaseDate}</span>
-                  <span>•</span>
-                  <div className="flex flex-wrap gap-2">
-                    {movie.genres.map((genre) => (
-                      <span
-                        key={genre}
-                        className="text-sm px-2 py-1 bg-gray-800/60 rounded"
-                      >
-                        {genre}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <p className="text-gray-300 text-lg mb-6 line-clamp-3">
-                  {movie.description}
-                </p>
-                <div className="flex flex-wrap gap-4">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center px-6 py-3 bg-red-600 text-white rounded-md font-medium"
-                  >
-                    <FiPlay className="mr-2" /> Xem ngay
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center px-6 py-3 bg-gray-800/80 text-white rounded-md font-medium"
-                  >
-                    <FiInfo className="mr-2" /> Chi tiết
-                  </motion.button>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        ))}
-
-        {/* Slider Controls */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2">
-          {featuredMovies.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`w-3 h-3 rounded-full transition-colors ${
-                index === currentSlide ? "bg-red-600" : "bg-gray-500"
+      {featuredMovies.length > 0 && (
+        <section className="relative h-[70vh] md:h-[80vh] overflow-hidden">
+          {featuredMovies.map((movie, index) => (
+            <div
+              key={movie._id}
+              className={`absolute inset-0 transition-opacity duration-1000 ${
+                index === currentSlide
+                  ? "opacity-100"
+                  : "opacity-0 pointer-events-none"
               }`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
+            >
+              {/* Backdrop Image */}
+              <div className="absolute inset-0">
+                <Image
+                  src={`https://image.tmdb.org/t/p/original${movie.backdropPath}`}
+                  alt={movie.title}
+                  fill
+                  priority
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+              </div>
+
+              {/* Content */}
+              <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-end pb-16 md:pb-24">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="max-w-2xl"
+                >
+                  <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
+                    {movie.title}
+                  </h1>
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="flex items-center">
+                      <FiStar className="text-yellow-500 mr-1" />
+                      <span>{movie.voteAverage.toFixed(1)}</span>
+                    </div>
+                    <span>•</span>
+                    <span>{movie.releaseDate}</span>
+                    <span>•</span>
+                    <div className="flex flex-wrap gap-2">
+                      {movie.genres.map((genre) => (
+                        <span
+                          key={genre.id}
+                          className="text-sm px-2 py-1 bg-gray-800/60 rounded"
+                        >
+                          {genre.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-gray-300 text-lg mb-6 line-clamp-3">
+                    {movie.overview}
+                  </p>
+                  <div className="flex flex-wrap gap-4">
+                    <Link href={`/movies/${movie._id}`}>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="flex items-center px-6 py-3 bg-red-600 text-white rounded-md font-medium"
+                      >
+                        <FiPlay className="mr-2" /> Xem ngay
+                      </motion.button>
+                    </Link>
+                    <Link href={`/movies/${movie._id}`}>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="flex items-center px-6 py-3 bg-gray-800/80 text-white rounded-md font-medium"
+                      >
+                        <FiInfo className="mr-2" /> Chi tiết
+                      </motion.button>
+                    </Link>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
           ))}
-        </div>
 
-        <button
-          onClick={prevSlide}
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
-          aria-label="Previous slide"
-        >
-          <FiChevronLeft size={24} />
-        </button>
+          {/* Slider Controls */}
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2">
+            {featuredMovies.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`w-3 h-3 rounded-full transition-colors ${
+                  index === currentSlide ? "bg-red-600" : "bg-gray-500"
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
 
-        <button
-          onClick={nextSlide}
-          className="absolute right-4 top-1/2 transform -translate-y-1/2 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
-          aria-label="Next slide"
-        >
-          <FiChevronRight size={24} />
-        </button>
-      </section>
+          <button
+            onClick={prevSlide}
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
+            aria-label="Previous slide"
+          >
+            <FiChevronLeft size={24} />
+          </button>
 
-      {/* Trending Movies */}
+          <button
+            onClick={nextSlide}
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-colors"
+            aria-label="Next slide"
+          >
+            <FiChevronRight size={24} />
+          </button>
+        </section>
+      )}
+
+      {/* Phim phổ biến */}
       <section className="py-12 bg-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold">
-              Phim đang thịnh hành
+            <h2 className="text-2xl md:text-3xl font-bold text-white">
+              Phim phổ biến
             </h2>
             <Link
-              href="/movies/trending"
+              href="/movies?filter=popular"
               className="text-red-500 hover:text-red-400 flex items-center"
             >
               Xem tất cả <FiChevronRight className="ml-1" />
@@ -373,36 +282,30 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {trendingMovies.map((movie) => (
-              <MovieCard key={movie.id} movie={movie} />
+            {popularMovies.map((movie) => (
+              <MovieCard key={movie._id} movie={movie} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Genres */}
+      {/* Thể loại */}
       <section className="py-12 bg-gradient-to-b from-black to-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl md:text-3xl font-bold mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold mb-6 text-white">
             Khám phá theo thể loại
           </h2>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {genres.map((genre) => (
+            {uniqueGenres.map((genre) => (
               <Link key={genre.id} href={`/genres/${genre.id}`}>
                 <motion.div
                   whileHover={{ scale: 1.03 }}
                   className="relative h-32 rounded-lg overflow-hidden"
                 >
-                  <Image
-                    src={genre.image}
-                    alt={genre.name}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/50 hover:bg-black/40 transition-colors" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <h3 className="text-xl font-bold text-white">
+                  <div className="absolute inset-0 bg-gradient-to-r from-gray-800 to-gray-700" />
+                  <div className="absolute inset-0 flex items-center p-4">
+                    <h3 className="text-lg md:text-xl font-semibold text-red-400">
                       {genre.name}
                     </h3>
                   </div>
@@ -413,13 +316,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Popular Movies */}
+      {/* Phim mới cập nhật */}
       <section className="py-12 bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold">Phim phổ biến</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-white">
+              Phim mới cập nhật
+            </h2>
             <Link
-              href="/movies/popular"
+              href="/movies?sort=release_date"
               className="text-red-500 hover:text-red-400 flex items-center"
             >
               Xem tất cả <FiChevronRight className="ml-1" />
@@ -427,29 +332,8 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {popularMovies.map((movie) => (
-              <MovieCard key={movie.id} movie={movie} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Upcoming Movies */}
-      <section className="py-12 bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold">Phim sắp chiếu</h2>
-            <Link
-              href="/movies/upcoming"
-              className="text-red-500 hover:text-red-400 flex items-center"
-            >
-              Xem tất cả <FiChevronRight className="ml-1" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {upcomingMovies.map((movie) => (
-              <MovieCard key={movie.id} movie={movie} />
+            {newMovies.map((movie) => (
+              <MovieCard key={movie._id} movie={movie} />
             ))}
           </div>
         </div>
