@@ -37,68 +37,51 @@ const tmdbApi = {
 
       console.log("Filtered trailers:", trailers);
 
-      // Xử lý cast và lưu vào Actor collection
-      const castPromises = creditsResponse.data.cast.slice(0, 10).map(async actor => {
-        // Tìm hoặc tạo actor trong database
-        const actorDetails = await getActorDetails(actor.id);
-        const existingActor = await Actor.findOne({ tmdbId: actor.id });
-        
-        let savedActor;
-        if (existingActor) {
-            savedActor = existingActor;
-        } else {
-            savedActor = await Actor.create(actorDetails);
-        }
-
-        // Tìm movie trong database bằng tmdbId
-        const movieInDb = await Movie.findOne({ tmdbId: movieResponse.data.id });
-        if (!movieInDb) {
-            throw new Error(`Không tìm thấy phim với tmdbId: ${movieResponse.data.id}`);
-        }
-
-        // Cập nhật movies trong Actor với ObjectId của movie
-        await Actor.findByIdAndUpdate(
-            savedActor._id,
-            {
-                $addToSet: {
-                    movies: {
-                        movie: movieInDb._id, // Sử dụng ObjectId thay vì tmdbId
-                        character: actor.character,
-                        order: actor.order
-                    }
-                }
-            }
-        );
-
-        return {
-            actor: savedActor._id,
+      // Xử lý cast
+      const cast = await Promise.all(
+        creditsResponse.data.cast.slice(0, 10).map(async (actor) => {
+          // Lấy thông tin chi tiết diễn viên
+          const actorDetails = await getActorDetails(actor.id);
+          
+          // Kiểm tra xem diễn viên đã tồn tại trong database chưa
+          const existingActor = await Actor.findOne({ tmdbId: actor.id });
+          
+          let actorId;
+          if (existingActor) {
+            actorId = existingActor._id;
+          } else {
+            // Nếu chưa tồn tại, tạo mới nhưng chưa liên kết với phim
+            const newActor = await Actor.create(actorDetails);
+            actorId = newActor._id;
+          }
+          
+          return {
+            actor: actorId,
             character: actor.character,
             order: actor.order
-        };
-      });
+          };
+        })
+      );
 
       // Xử lý directors
-      const directorPromises = creditsResponse.data.crew
-        .filter((crew) => crew.job === "Director")
-        .map(async (director) => {
-          const directorDetails = await getActorDetails(director.id);
-          const existingDirector = await Actor.findOne({ tmdbId: director.id });
+      const directors = await Promise.all(
+        creditsResponse.data.crew
+          .filter((crew) => crew.job === "Director")
+          .map(async (director) => {
+            const directorDetails = await getActorDetails(director.id);
+            const existingDirector = await Actor.findOne({ tmdbId: director.id });
 
-          let savedDirector;
-          if (existingDirector) {
-            savedDirector = existingDirector;
-          } else {
-            savedDirector = await Actor.create(directorDetails);
-          }
+            let directorId;
+            if (existingDirector) {
+              directorId = existingDirector._id;
+            } else {
+              const newDirector = await Actor.create(directorDetails);
+              directorId = newDirector._id;
+            }
 
-          return savedDirector._id;
-        });
-
-      // Đợi tất cả promises hoàn thành
-      const [cast, directors] = await Promise.all([
-        Promise.all(castPromises),
-        Promise.all(directorPromises),
-      ]);
+            return directorId;
+          })
+      );
 
       // Kết hợp thông tin phim và trailers
       return {
@@ -164,6 +147,7 @@ const tmdbApi = {
     }
   },
 
+  // Lấy thông tin diễn viên cho phim
   getMovieCredits: async (movieId) => {
     try {
       const url = `${TMDB_BASE_URL}/movie/${movieId}/credits?api_key=${TMDB_API_KEY}&language=vi-VN`;

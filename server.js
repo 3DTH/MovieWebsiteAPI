@@ -4,15 +4,14 @@ dotenv.config();
 
 const express = require("express");
 const connectDB = require("./config/db");
+const cors = require("cors");
 const movieRoutes = require("./routes/movieRoutes");
 const favoriteRoutes = require('./routes/favoriteRoutes');
 const userRoutes = require("./routes/userRoutes");
 const authRoutes = require("./routes/authRoutes");
-const { errorHandler }  = require("./middleware/error");
-const { syncMovies } = require('./controllers/movieController');
-const cron = require('node-cron');
 const actorRoutes = require('./routes/actorRoutes');
 const passport = require('passport');
+const { errorHandler }  = require("./middleware/error");
 require('./config/passport');
 
 // Connect to database
@@ -23,6 +22,14 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// CORS Middleware
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Routes
 app.use("/api/movies", movieRoutes);
@@ -36,17 +43,6 @@ app.use(passport.initialize());
 
 // Error handler
 app.use(errorHandler);
-
-// Chạy job mỗi ngày lúc 00:00
-cron.schedule('0 0 * * *', async () => {
-    try {
-        console.log('Bắt đầu đồng bộ dữ liệu phim...');
-        await syncMovies();
-        console.log('Đồng bộ dữ liệu phim thành công');
-    } catch (error) {
-        console.error('Lỗi đồng bộ dữ liệu:', error);
-    }
-});
 
 const PORT = process.env.PORT;
 

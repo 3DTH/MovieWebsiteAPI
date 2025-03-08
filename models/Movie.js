@@ -38,6 +38,14 @@ const movieSchema = new mongoose.Schema({
     voteAverage: Number,
     voteCount: Number,
     popularity: Number,
+    isPopular: {
+        type: Boolean,
+        default: false
+    },
+    nowPlaying: {
+        type: Boolean,
+        default: false
+    },
     genres: [{
         id: Number,
         name: String

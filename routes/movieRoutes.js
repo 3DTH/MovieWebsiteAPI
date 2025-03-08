@@ -2,12 +2,13 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const {
-    syncMovies,
+    syncPopularMovies,
     getMovies,
     getMovieDetails,
     searchMovies,
-    migrateMovieActors,
-    deleteMovie
+    deleteMovie,
+    syncNowPlayingMovies,
+    syncAllMovies
 } = require('../controllers/movieController');
 const commentRouter = require('./commentRoutes');
 
@@ -20,11 +21,12 @@ router.get('/:id', getMovieDetails);
 router.use(protect);
 
 // Admin routes
-router.post('/sync', authorize('admin'), syncMovies);
-router.post('/migrate-actors', authorize('admin'), migrateMovieActors);
+router.post('/sync-popular', authorize('admin'), syncPopularMovies);
+router.post('/sync-now-playing', authorize('admin'), syncNowPlayingMovies);
+router.post('/sync-all', authorize('admin'), syncAllMovies);
 router.delete('/:id', authorize('admin'), deleteMovie);
 
 // Re-route vào comment routes
 router.use('/:movieId/comments', commentRouter);
 
-module.exports = router; 
+module.exports = router;

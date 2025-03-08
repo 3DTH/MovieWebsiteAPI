@@ -5,8 +5,8 @@ const Comment = require('../models/Comment');
 const Actor = require('../models/Actor');
 const User = require('../models/User');
 
-// Cập nhật danh sách phim từ TMDB
-exports.syncMovies = async (req, res, next) => {
+// Cập nhật danh sách phim phổ biến
+exports.syncPopularMovies = async (req, res, next) => {
     try {
         const popularMovies = await tmdbApi.getPopularMovies();
         
@@ -29,6 +29,7 @@ exports.syncMovies = async (req, res, next) => {
                         voteAverage: movie.vote_average,
                         voteCount: movie.vote_count,
                         popularity: movie.popularity,
+                        isPopular: true,
                         genres: movieDetails.genres,
                         videos: movieDetails.videos,
                         cast: movieDetails.cast,
@@ -70,7 +71,7 @@ exports.syncMovies = async (req, res, next) => {
                     );
                 }
                 
-                console.log(`Đã cập nhật phim và diễn viên: ${movie.title}`);
+                console.log(`Đã cập nhật phim phổ biến và diễn viên: ${movie.title}`);
                 
                 // Thêm delay để tránh rate limit
                 await new Promise(resolve => setTimeout(resolve, 1000));
@@ -82,7 +83,92 @@ exports.syncMovies = async (req, res, next) => {
 
         res.json({
             success: true,
-            message: 'Đồng bộ dữ liệu phim và diễn viên thành công'
+            message: 'Đồng bộ dữ liệu phim phổ biến và diễn viên thành công'
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Cập nhật danh sách phim đang chiếu
+exports.syncNowPlayingMovies = async (req, res, next) => {
+    try {
+        const nowPlayingMovies = await tmdbApi.getNowPlaying();
+        
+        for (const movie of nowPlayingMovies.results) {
+            try {
+                // Lấy chi tiết phim từ TMDB (đã bao gồm xử lý actors)
+                const movieDetails = await tmdbApi.getMovieDetails(movie.id);
+                
+                // Cập nhật hoặc tạo mới phim trong database
+                const updatedMovie = await Movie.findOneAndUpdate(
+                    { tmdbId: movie.id },
+                    {
+                        tmdbId: movie.id,
+                        title: movie.title,
+                        originalTitle: movie.original_title,
+                        overview: movie.overview,
+                        posterPath: movie.poster_path,
+                        backdropPath: movie.backdrop_path,
+                        releaseDate: movie.release_date,
+                        voteAverage: movie.vote_average,
+                        voteCount: movie.vote_count,
+                        popularity: movie.popularity,
+                        genres: movieDetails.genres,
+                        videos: movieDetails.videos,
+                        cast: movieDetails.cast,
+                        directors: movieDetails.directors,
+                        nowPlaying: true,  // Đánh dấu đây là phim đang chiếu
+                        lastUpdated: new Date()
+                    },
+                    { upsert: true, new: true }
+                );
+
+                // Cập nhật movies trong bảng Actor cho cast
+                for (const castMember of movieDetails.cast) {
+                    await Actor.findByIdAndUpdate(
+                        castMember.actor,
+                        {
+                            $addToSet: {
+                                movies: {
+                                    movie: updatedMovie._id,
+                                    character: castMember.character,
+                                    order: castMember.order
+                                }
+                            }
+                        }
+                    );
+                }
+
+                // Cập nhật movies trong bảng Actor cho directors
+                for (const directorId of movieDetails.directors) {
+                    await Actor.findByIdAndUpdate(
+                        directorId,
+                        {
+                            $addToSet: {
+                                movies: {
+                                    movie: updatedMovie._id,
+                                    character: 'Director',
+                                    order: 0
+                                }
+                            }
+                        }
+                    );
+                }
+                
+                console.log(`Đã cập nhật phim đang chiếu và diễn viên: ${movie.title}`);
+                
+                // Thêm delay để tránh rate limit
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            } catch (error) {
+                console.error(`Lỗi khi xử lý phim ${movie.title}:`, error);
+                continue;
+            }
+        }
+
+        res.json({
+            success: true,
+            message: 'Đồng bộ dữ liệu phim đang chiếu và diễn viên thành công'
         });
     } catch (error) {
         next(error);
@@ -117,7 +203,7 @@ exports.getMovies = async (req, res, next) => {
     }
 };
 
-// Lấy chi tiết phim và lưu vào DB nếu chưa có
+// Lấy chi tiết phim
 exports.getMovieDetails = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -140,63 +226,6 @@ exports.getMovieDetails = async (req, res, next) => {
         next(error);
     }
 };
-
-// chỉ dùng trong quá trình phát triển 
-// exports.initialSync = async (req, res, next) => {
-//     try {
-//         console.log('Bắt đầu đồng bộ dữ liệu ban đầu...');
-        
-//         // Lấy nhiều trang phim
-//         for(let page = 1; page <= 5; page++) {
-//             const popularMovies = await tmdbApi.getPopularMovies(page);
-//             console.log(`Đang xử lý trang ${page}...`);
-            
-//             for (const movie of popularMovies.results) {
-//                 console.log(`Đang xử lý phim: ${movie.title}`);
-                
-//                 // Kiểm tra xem phim đã tồn tại chưa
-//                 const existingMovie = await Movie.findOne({ tmdbId: movie.id });
-//                 if (existingMovie) {
-//                     console.log(`Phim ${movie.title} đã tồn tại, bỏ qua...`);
-//                     continue;
-//                 }
-
-//                 // Lấy chi tiết phim và videos
-//                 const movieDetails = await tmdbApi.getMovieDetails(movie.id);
-                
-//                 // Lưu vào database
-//                 await Movie.create({
-//                     tmdbId: movie.id,
-//                     title: movie.title,
-//                     originalTitle: movie.original_title,
-//                     overview: movie.overview,
-//                     posterPath: movie.poster_path,
-//                     backdropPath: movie.backdrop_path,
-//                     releaseDate: movie.release_date,
-//                     voteAverage: movie.vote_average,
-//                     voteCount: movie.vote_count,
-//                     popularity: movie.popularity,
-//                     genres: movieDetails.genres,
-//                     videos: movieDetails.videos,
-//                     lastUpdated: new Date()
-//                 });
-                
-//                 console.log(`Đã lưu phim: ${movie.title} với ${movieDetails.videos?.length || 0} videos`);
-                
-//                 // Đợi 1 giây để tránh vượt quá giới hạn rate của TMDB API
-//                 await new Promise(resolve => setTimeout(resolve, 1000));
-//             }
-//         }
-
-//         res.json({
-//             success: true,
-//             message: 'Đồng bộ dữ liệu ban đầu thành công'
-//         });
-//     } catch (error) {
-//         console.error('Lỗi:', error);
-//         next(error);
-//     }
-// }; 
 
 // Tìm kiếm phim
 exports.searchMovies = async (req, res, next) => {
@@ -263,80 +292,6 @@ exports.searchMovies = async (req, res, next) => {
     }
 };
 
-// Hàm migration để cập nhật database
-exports.migrateMovieActors = async (req, res, next) => {
-    try {
-        console.log('Bắt đầu migration...');
-        
-        // Lấy tất cả phim
-        const movies = await Movie.find();
-        console.log(`Tìm thấy ${movies.length} phim cần cập nhật`);
-
-        for (const movie of movies) {
-            try {
-                console.log(`Đang xử lý phim: ${movie.title}`);
-
-                // Lấy thông tin mới từ TMDB
-                const movieDetails = await tmdbApi.getMovieDetails(movie.tmdbId);
-
-                // Cập nhật phim với cast và directors mới
-                const updatedMovie = await Movie.findByIdAndUpdate(movie._id, {
-                    cast: movieDetails.cast,
-                    directors: movieDetails.directors,
-                    lastUpdated: new Date()
-                }, { new: true });
-
-                // Cập nhật movies trong bảng Actor
-                for (const castMember of updatedMovie.cast) {
-                    await Actor.findByIdAndUpdate(
-                        castMember.actor,
-                        {
-                            $addToSet: {
-                                movies: {
-                                    movie: updatedMovie._id,
-                                    character: castMember.character,
-                                    order: castMember.order
-                                }
-                            }
-                        }
-                    );
-                }
-
-                // Cập nhật cho directors
-                for (const directorId of updatedMovie.directors) {
-                    await Actor.findByIdAndUpdate(
-                        directorId,
-                        {
-                            $addToSet: {
-                                movies: {
-                                    movie: updatedMovie._id,
-                                    character: 'Director',
-                                    order: 0
-                                }
-                            }
-                        }
-                    );
-                }
-
-                console.log(`Đã cập nhật phim và diễn viên cho: ${movie.title}`);
-
-                // Thêm delay để tránh rate limit
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            } catch (error) {
-                console.error(`Lỗi khi xử lý phim ${movie.title}:`, error);
-                continue; // Tiếp tục với phim tiếp theo nếu có lỗi
-            }
-        }
-
-        res.json({
-            success: true,
-            message: `Đã cập nhật ${movies.length} phim và diễn viên thành công`
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
 // Xóa phim
 exports.deleteMovie = async (req, res, next) => {
     try {
@@ -369,6 +324,123 @@ exports.deleteMovie = async (req, res, next) => {
         res.json({
             success: true,
             data: {}
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+// Hàm để đồng bộ cả phim phổ biến và phim đang chiếu
+exports.syncAllMovies = async (req, res, next) => {
+    try {
+        // Đồng bộ phim phổ biến
+        const popularMovies = await tmdbApi.getPopularMovies();
+        // Đồng bộ phim đang chiếu
+        const nowPlayingMovies = await tmdbApi.getNowPlaying();
+        
+        // Gộp danh sách phim (loại bỏ trùng lặp bằng Set)
+        const movieIds = new Set();
+        const allMovies = [];
+        
+        // Thêm phim phổ biến
+        for (const movie of popularMovies.results) {
+            if (!movieIds.has(movie.id)) {
+                movieIds.add(movie.id);
+                allMovies.push({...movie, isPopular: true});
+            }
+        }
+        
+        // Thêm phim đang chiếu
+        for (const movie of nowPlayingMovies.results) {
+            if (!movieIds.has(movie.id)) {
+                movieIds.add(movie.id);
+                allMovies.push({...movie, nowPlaying: true});
+            } else {
+                // Nếu phim đã có trong danh sách (từ phim phổ biến), đánh dấu là đang chiếu
+                const existingMovie = allMovies.find(m => m.id === movie.id);
+                if (existingMovie) {
+                    existingMovie.nowPlaying = true;
+                }
+            }
+        }
+        
+        // Xử lý từng phim và lưu vào database
+        for (const movie of allMovies) {
+            try {
+                // Lấy chi tiết phim từ TMDB (đã bao gồm xử lý actors)
+                const movieDetails = await tmdbApi.getMovieDetails(movie.id);
+                
+                // Cập nhật hoặc tạo mới phim trong database
+                const updatedMovie = await Movie.findOneAndUpdate(
+                    { tmdbId: movie.id },
+                    {
+                        tmdbId: movie.id,
+                        title: movie.title,
+                        originalTitle: movie.original_title,
+                        overview: movie.overview,
+                        posterPath: movie.poster_path,
+                        backdropPath: movie.backdrop_path,
+                        releaseDate: movie.release_date,
+                        voteAverage: movie.vote_average,
+                        voteCount: movie.vote_count,
+                        popularity: movie.popularity,
+                        isPopular: movie.isPopular || false,
+                        nowPlaying: movie.nowPlaying || false,
+                        genres: movieDetails.genres,
+                        videos: movieDetails.videos,
+                        cast: movieDetails.cast,
+                        directors: movieDetails.directors,
+                        lastUpdated: new Date()
+                    },
+                    { upsert: true, new: true }
+                );
+
+                // Cập nhật movies trong bảng Actor cho cast
+                for (const castMember of movieDetails.cast) {
+                    await Actor.findByIdAndUpdate(
+                        castMember.actor,
+                        {
+                            $addToSet: {
+                                movies: {
+                                    movie: updatedMovie._id,
+                                    character: castMember.character,
+                                    order: castMember.order
+                                }
+                            }
+                        }
+                    );
+                }
+
+                // Cập nhật movies trong bảng Actor cho directors
+                for (const directorId of movieDetails.directors) {
+                    await Actor.findByIdAndUpdate(
+                        directorId,
+                        {
+                            $addToSet: {
+                                movies: {
+                                    movie: updatedMovie._id,
+                                    character: 'Director',
+                                    order: 0
+                                }
+                            }
+                        }
+                    );
+                }
+                
+                console.log(`Đã cập nhật phim và diễn viên: ${movie.title}`);
+                
+                // Thêm delay để tránh rate limit
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            } catch (error) {
+                console.error(`Lỗi khi xử lý phim ${movie.title}:`, error);
+                continue;
+            }
+        }
+
+        res.json({
+            success: true,
+            message: 'Đồng bộ tất cả dữ liệu phim và diễn viên thành công'
         });
     } catch (error) {
         next(error);
