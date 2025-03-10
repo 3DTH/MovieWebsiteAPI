@@ -73,6 +73,10 @@ export default function Home() {
   const [popularMovies, setPopularMovies] = useState<Movie[]>([]);
   const [newMovies, setNewMovies] = useState<Movie[]>([]);
   const [uniqueGenres, setUniqueGenres] = useState<{id: number, name: string}[]>([]);
+  // Thêm state mới
+  const [topRatedMovies, setTopRatedMovies] = useState<Movie[]>([]);
+  const [actionMovies, setActionMovies] = useState<Movie[]>([]);
+  const [dramaMovies, setDramaMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -96,6 +100,22 @@ export default function Home() {
             new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
           );
           setNewMovies(sortedByDate.slice(0, 6));
+          
+          // Lọc phim theo đánh giá cao nhất
+          const sortedByRating = [...allMovies].sort((a, b) => b.voteAverage - a.voteAverage);
+          setTopRatedMovies(sortedByRating.slice(0, 6));
+          
+          // Lọc phim theo thể loại hành động (id=28 là Action trong TMDB)
+          const actionGenreMovies = allMovies.filter(movie => 
+            movie.genres.some(genre => genre.id === 28)
+          );
+          setActionMovies(actionGenreMovies.slice(0, 6));
+          
+          // Lọc phim theo thể loại drama (id=18 là Drama trong TMDB)
+          const dramaGenreMovies = allMovies.filter(movie => 
+            movie.genres.some(genre => genre.id === 18)
+          );
+          setDramaMovies(dramaGenreMovies.slice(0, 6));
           
           // Trích xuất tất cả thể loại duy nhất từ các phim
           const allGenres = allMovies.flatMap(movie => movie.genres);
@@ -339,6 +359,127 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Phim đánh giá cao */}
+      <section className="py-12 bg-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-white">
+              Phim đánh giá cao
+            </h2>
+            <Link
+              href="/movies?sort=vote_average"
+              className="text-red-500 hover:text-red-400 flex items-center"
+            >
+              Xem tất cả <FiChevronRight className="ml-1" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {topRatedMovies.map((movie) => (
+              <MovieCard key={movie._id} movie={movie} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Phim hành động */}
+      <section className="py-12 bg-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-white">
+              Phim hành động
+            </h2>
+            <Link
+              href="/genres/28"
+              className="text-red-500 hover:text-red-400 flex items-center"
+            >
+              Xem tất cả <FiChevronRight className="ml-1" />
+            </Link>
+          </div>
+
+          {/* Horizontal Scrollable Section */}
+          <div className="relative">
+            <div className="overflow-x-auto pb-4 hide-scrollbar">
+              <div className="flex space-x-4 w-max">
+                {actionMovies.map((movie) => (
+                  <div key={movie._id} className="w-[180px]">
+                    <MovieCard movie={movie} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Phim chính kịch */}
+      <section className="py-12 bg-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-white">
+              Phim chính kịch
+            </h2>
+            <Link
+              href="/genres/18"
+              className="text-red-500 hover:text-red-400 flex items-center"
+            >
+              Xem tất cả <FiChevronRight className="ml-1" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {dramaMovies.map((movie) => (
+              <MovieCard key={movie._id} movie={movie} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Phim đề xuất cho bạn - Hiển thị dạng card lớn */}
+      <section className="py-12 bg-gradient-to-b from-gray-900 to-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl md:text-3xl font-bold mb-6 text-white">
+            Đề xuất cho bạn
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featuredMovies.slice(0, 3).map((movie) => (
+              <Link key={movie._id} href={`/movies/${movie._id}`}>
+                <motion.div 
+                  whileHover={{ scale: 1.03 }}
+                  className="relative h-64 rounded-xl overflow-hidden group"
+                >
+                  <Image
+                    src={`https://image.tmdb.org/t/p/w500${movie.backdropPath || movie.posterPath}`}
+                    alt={movie.title}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+                  
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <h3 className="text-xl font-bold text-white group-hover:text-red-400 transition-colors">
+                      {movie.title}
+                    </h3>
+                    <p className="text-gray-300 text-sm mt-1 line-clamp-2">
+                      {movie.overview}
+                    </p>
+                    <div className="flex items-center mt-2">
+                      <FiStar className="text-yellow-500 mr-1" />
+                      <span className="text-white">{movie.voteAverage.toFixed(1)}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="absolute top-3 right-3 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-md">
+                    HOT
+                  </div>
+                </motion.div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Newsletter */}
       <section className="py-16 bg-gradient-to-b from-black to-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -417,7 +558,7 @@ export default function Home() {
             </div>
             <div className="relative h-64 md:h-80">
               <Image
-                src="/app-mockup.jpg"
+                src="/app-mockup.svg"
                 alt="3DFlix App"
                 fill
                 className="object-contain"
