@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,7 +17,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "3DFLix - Xem phim trực tuyến",
-  description: "Trang web xem phim trực tuyến với các bộ phim mới nhất và phổ biến nhất",
+  description:
+    "Trang web xem phim trực tuyến với các bộ phim mới nhất và phổ biến nhất",
 };
 
 export default function RootLayout({
@@ -29,11 +31,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white min-h-screen flex flex-col`}
       >
-        <Header />
-        <main className="pt-16 md:pt-20 flex-grow">
-          {children}
-        </main>
-        <Footer />
+        <AuthProvider>
+          <Header />
+          <main className="pt-16 md:pt-20 flex-grow">{children}</main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

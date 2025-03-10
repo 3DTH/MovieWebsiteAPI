@@ -36,7 +36,12 @@ export const login = async (loginData: LoginData) => {
 };
 
 // Lấy thông tin người dùng hiện tại (dựa vào token)
-export const getCurrentUser = async () => {
+export const getCurrentUser = async (): Promise<{
+  data: {
+    success: boolean;
+    user: User;
+  };
+}> => {
   const token = localStorage.getItem('token');
   if (!token) {
     throw new Error('No token found');
@@ -53,7 +58,20 @@ export const getCurrentUser = async () => {
         .join('')
     );
 
-    return JSON.parse(jsonPayload);
+    const userData = JSON.parse(jsonPayload);
+    
+    // Trả về định dạng tương tự response từ API để code khác không phải thay đổi
+    return {
+      data: {
+        success: true,
+        user: {
+          id: userData.id,
+          username: userData.username || userData.email,
+          email: userData.email,
+          role: userData.role || 'user'
+        }
+      }
+    };
   } catch (error) {
     throw new Error('Invalid token');
   }
@@ -92,12 +110,12 @@ export const getToken = (): string | null => {
 
 // Xử lý đăng nhập thông qua Google
 export const getGoogleLoginUrl = (): string => {
-  return `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
+  return `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`;
 };
 
 // Xử lý đăng nhập thông qua Facebook
 export const getFacebookLoginUrl = (): string => {
-  return `${process.env.NEXT_PUBLIC_API_URL}/auth/facebook`;
+  return `${process.env.NEXT_PUBLIC_API_URL}/api/auth/facebook`;
 };
 
 // Hàm để xử lý token nhận được từ redirect sau khi đăng nhập bằng Google/Facebook
@@ -113,6 +131,8 @@ export const handleSocialLogin = (): boolean => {
     
     if (token) {
       setToken(token);
+      // Xóa token khỏi URL
+      window.history.replaceState({}, document.title, window.location.pathname);
       return true;
     }
     
@@ -127,7 +147,7 @@ export const handleSocialLogin = (): boolean => {
 export const isAdmin = async (): Promise<boolean> => {
   try {
     const user = await getCurrentUser();
-    return user.role === 'admin';
+    return user.data.user.role === 'admin';
   } catch (error) {
     return false;
   }

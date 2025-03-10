@@ -417,7 +417,7 @@ export default function Home() {
             </div>
             <div className="relative h-64 md:h-80">
               <Image
-                src="/app-mockup.png"
+                src="/app-mockup.jpg"
                 alt="3DFlix App"
                 fill
                 className="object-contain"

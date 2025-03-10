@@ -1,15 +1,18 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiAlertCircle, FiArrowLeft } from 'react-icons/fi';
 import { FaGoogle, FaFacebookF } from 'react-icons/fa';
+import { getGoogleLoginUrl, getFacebookLoginUrl, handleSocialLogin } from '@/app/api/authApi';
+import { useAuth } from '@/contexts/AuthContext';
 
 const RegisterForm = () => {
   const router = useRouter();
+  const { register, isLoading: authLoading, refreshUserData } = useAuth();
   const [formData, setFormData] = useState({
-    name: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -20,6 +23,32 @@ const RegisterForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
 
+  // Xử lý đăng nhập từ mạng xã hội (Google/Facebook)
+  useEffect(() => {
+    const processSocialLogin = async () => {
+      try {
+        // Sử dụng handleSocialLogin đã được cập nhật
+        const success = handleSocialLogin();
+        
+        if (success) {
+          setIsLoading(true);
+          
+          // Cập nhật thông tin người dùng
+          await refreshUserData();
+          
+          // Chuyển hướng về trang chủ
+          router.push('/');
+        }
+      } catch (error) {
+        console.error('Lỗi khi xử lý đăng nhập mạng xã hội:', error);
+        setError('Đã xảy ra lỗi khi xử lý đăng nhập từ mạng xã hội');
+        setIsLoading(false);
+      }
+    };
+    
+    processSocialLogin();
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -29,8 +58,8 @@ const RegisterForm = () => {
   };
 
   const validateStep1 = () => {
-    if (!formData.name.trim()) {
-      setError('Vui lòng nhập tên của bạn');
+    if (!formData.username.trim()) {
+      setError('Vui lòng nhập tên người dùng');
       return false;
     }
     if (!formData.email.trim()) {
@@ -78,43 +107,91 @@ const RegisterForm = () => {
     setIsLoading(true);
 
     try {
-      // Here you would call your registration API
-      // For now, we'll simulate a registration process
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const userData = {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password
+      };
       
-      // Redirect to login page after successful registration
-      router.push('/login');
-    } catch (err) {
-      setError('Đăng ký thất bại. Vui lòng thử lại sau.');
+      // Sử dụng hàm register từ AuthContext
+      const response = await register(userData);
+      
+      if (response.data.success) {
+        // Đợi một chút để AuthContext có thời gian cập nhật state
+        setTimeout(() => {
+          router.push('/');
+        }, 1000);
+      } else {
+        // Hiển thị thông báo lỗi rõ ràng hơn
+        let errorMessage = response.data.message || 'Đăng ký thất bại';
+        
+        // Kiểm tra thông điệp lỗi cụ thể
+        if (errorMessage.toLowerCase().includes('username') && errorMessage.toLowerCase().includes('exists')) {
+          errorMessage = 'Tên người dùng này đã tồn tại, vui lòng chọn tên khác';
+        } else if (errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('exists')) {
+          errorMessage = 'Email này đã được đăng ký, vui lòng sử dụng email khác';
+        }
+        
+        setError(errorMessage);
+      }
+    } catch (error: any) {
+      console.error('Register error:', error);
+      
+      // Xem cấu trúc đầy đủ của dữ liệu lỗi
+      if (error.response && error.response.data) {
+        console.log('Error response data:', error.response.data);
+      }
+      
+      // Xử lý các lỗi từ API response
+      let errorMessage = 'Đã xảy ra lỗi khi đăng ký';
+      
+      if (error.response) {
+        // Xử lý thông báo lỗi từ server
+        const responseData = error.response.data;
+        
+        if (responseData) {
+          // Kiểm tra các cấu trúc lỗi có thể có
+          if (responseData.message) {
+            errorMessage = responseData.message;
+          } else if (responseData.error) {
+            errorMessage = responseData.error;
+          } else if (typeof responseData === 'string') {
+            errorMessage = responseData;
+          }
+          
+          // Kiểm tra thông điệp lỗi cụ thể
+          if (errorMessage.toLowerCase().includes('username') && 
+              (errorMessage.toLowerCase().includes('exists') || errorMessage.toLowerCase().includes('taken'))) {
+            errorMessage = 'Tên người dùng này đã tồn tại, vui lòng chọn tên khác';
+          } else if (errorMessage.toLowerCase().includes('email') && 
+                    (errorMessage.toLowerCase().includes('exists') || errorMessage.toLowerCase().includes('taken'))) {
+            errorMessage = 'Email này đã được đăng ký, vui lòng sử dụng email khác';
+          } else if (error.response.status === 400) {
+            // Nếu không có thông báo cụ thể từ server nhưng status là 400
+            errorMessage = 'Thông tin đăng ký không hợp lệ, có thể username hoặc email đã tồn tại';
+          } else if (error.response.status === 500) {
+            errorMessage = 'Lỗi máy chủ, vui lòng thử lại sau';
+          }
+        }
+      } else if (error.request) {
+        // Lỗi không nhận được phản hồi từ server
+        errorMessage = 'Không thể kết nối đến máy chủ, vui lòng kiểm tra kết nối của bạn';
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleRegister = async () => {
-    setIsLoading(true);
-    try {
-      // Implement Google registration logic here
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      router.push('/');
-    } catch (error) {
-      setError('Đăng ký bằng Google thất bại');
-    } finally {
-      setIsLoading(false);
-    }
+  const handleGoogleRegister = () => {
+    // Chuyển hướng đến URL đăng nhập Google
+    window.location.href = getGoogleLoginUrl();
   };
 
-  const handleFacebookRegister = async () => {
-    setIsLoading(true);
-    try {
-      // Implement Facebook registration logic here
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      router.push('/');
-    } catch (error) {
-      setError('Đăng ký bằng Facebook thất bại');
-    } finally {
-      setIsLoading(false);
-    }
+  const handleFacebookRegister = () => {
+    // Chuyển hướng đến URL đăng nhập Facebook
+    window.location.href = getFacebookLoginUrl();
   };
 
   return (
@@ -129,8 +206,8 @@ const RegisterForm = () => {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <FiAlertCircle className="mr-2" />
-          <span>{error}</span>
+          <FiAlertCircle className="mr-2 flex-shrink-0" />
+          <span className="text-sm">{error}</span>
         </motion.div>
       )}
 
@@ -144,20 +221,20 @@ const RegisterForm = () => {
             transition={{ duration: 0.3 }}
           >
             <div className="mb-4">
-              <label className="block text-gray-400 text-sm mb-2" htmlFor="name">
-                Họ và tên
+              <label className="block text-gray-400 text-sm mb-2" htmlFor="username">
+                Tên người dùng
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FiUser className="text-gray-500" />
                 </div>
                 <input
-                  id="name"
-                  name="name"
+                  id="username"
+                  name="username"
                   type="text"
                   className="w-full pl-10 pr-3 py-3 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                  placeholder="Nguyễn Văn A"
-                  value={formData.name}
+                  placeholder="username"
+                  value={formData.username}
                   onChange={handleChange}
                 />
               </div>
@@ -317,7 +394,7 @@ const RegisterForm = () => {
                 className="w-2/3 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors flex justify-center items-center"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                disabled={isLoading}
+                disabled={isLoading || authLoading}
               >
                 {isLoading ? (
                   <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

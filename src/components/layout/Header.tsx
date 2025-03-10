@@ -5,7 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiSearch, FiMenu, FiX, FiUser, FiBell, FiLogIn } from 'react-icons/fi';
+import { FiSearch, FiMenu, FiX, FiUser, FiBell, FiLogIn, FiLogOut } from 'react-icons/fi';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -14,6 +15,7 @@ const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
   const pathname = usePathname();
+  const { isAuthenticated, logout, user } = useAuth();
 
   // Handle scroll effect
   useEffect(() => {
@@ -37,6 +39,12 @@ const Header: React.FC = () => {
       setIsSearchOpen(false);
       setSearchQuery('');
     }
+  };
+
+  // Xử lý đăng xuất
+  const handleLogout = async () => {
+    await logout();
+    router.push('/');
   };
 
   // Navigation items
@@ -73,7 +81,6 @@ const Header: React.FC = () => {
             </motion.div>
           </Link>
 
-          {/* Rest of the component remains unchanged */}
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
             {navItems.map((item) => (
@@ -102,42 +109,61 @@ const Header: React.FC = () => {
               <FiSearch className="h-5 w-5" />
             </motion.button>
 
-            {/* User Menu */}
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="relative"
-            >
-              <Link href="/profile" className="text-gray-200 hover:text-red-500 transition-colors">
-                <FiUser className="h-5 w-5" />
-              </Link>
-            </motion.div>
+            {isAuthenticated ? (
+              <>
+                {/* User Menu - Hiển thị khi đã đăng nhập */}
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="relative"
+                >
+                  <Link href="/profile" className="text-gray-200 hover:text-red-500 transition-colors flex items-center">
+                    <FiUser className="h-5 w-5" />
+                    {user && <span className="ml-1 text-sm font-semibold">{user.username}</span>}
+                  </Link>
+                </motion.div>
 
-            {/* Notifications */}
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="relative"
-            >
-              <button className="text-gray-200 hover:text-red-500 transition-colors">
-                <FiBell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 bg-red-500 rounded-full w-2 h-2"></span>
-              </button>
-            </motion.div>
+                {/* Notifications - Hiển thị khi đã đăng nhập */}
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="relative"
+                >
+                  <button className="text-gray-200 hover:text-red-500 transition-colors">
+                    <FiBell className="h-5 w-5" />
+                    <span className="absolute -top-1 -right-1 bg-red-500 rounded-full w-2 h-2"></span>
+                  </button>
+                </motion.div>
 
-            {/* Login/Register */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Link 
-                href="/login" 
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors"
+                {/* Logout Button - Hiển thị khi đã đăng nhập */}
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <button 
+                    onClick={handleLogout}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors"
+                  >
+                    <FiLogOut className="mr-2 h-4 w-4" />
+                    Đăng xuất
+                  </button>
+                </motion.div>
+              </>
+            ) : (
+              /* Login/Register Button - Hiển thị khi chưa đăng nhập */
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <FiLogIn className="mr-2 h-4 w-4" />
-                Đăng nhập
-              </Link>
-            </motion.div>
+                <Link 
+                  href="/login" 
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors"
+                >
+                  <FiLogIn className="mr-2 h-4 w-4" />
+                  Đăng nhập
+                </Link>
+              </motion.div>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -226,23 +252,40 @@ const Header: React.FC = () => {
                   Tìm kiếm
                 </button>
                 
-                <Link
-                  href="/login"
-                  className="flex items-center py-2 text-base font-medium text-gray-200 hover:text-red-500"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <FiLogIn className="mr-3 h-5 w-5" />
-                  Đăng nhập
-                </Link>
-                
-                <Link
-                  href="/profile"
-                  className="flex items-center py-2 text-base font-medium text-gray-200 hover:text-red-500"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <FiUser className="mr-3 h-5 w-5" />
-                  Tài khoản
-                </Link>
+                {isAuthenticated ? (
+                  <>
+                    {/* Hiển thị khi đã đăng nhập */}
+                    <Link
+                      href="/profile"
+                      className="flex items-center py-2 text-base font-medium text-gray-200 hover:text-red-500"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <FiUser className="mr-3 h-5 w-5" />
+                      Tài khoản
+                    </Link>
+                    
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center py-2 text-base font-medium text-gray-200 hover:text-red-500"
+                    >
+                      <FiLogOut className="mr-3 h-5 w-5" />
+                      Đăng xuất
+                    </button>
+                  </>
+                ) : (
+                  /* Hiển thị khi chưa đăng nhập */
+                  <Link
+                    href="/login"
+                    className="flex items-center py-2 text-base font-medium text-gray-200 hover:text-red-500"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <FiLogIn className="mr-3 h-5 w-5" />
+                    Đăng nhập
+                  </Link>
+                )}
               </div>
             </div>
           </motion.div>
