@@ -8,7 +8,7 @@ exports.getActorDetails = async (req, res, next) => {
         const { id } = req.params;
         
         let actor = await Actor.findOne({ tmdbId: id })
-            .populate('movies.movie', 'title posterPath releaseDate');
+            .populate('movies.movie', 'title posterPath releaseDate tmdbId');
 
         if (!actor) {
             // Lấy thông tin từ TMDB nếu chưa có
