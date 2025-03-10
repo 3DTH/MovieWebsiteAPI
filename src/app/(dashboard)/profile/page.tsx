@@ -7,9 +7,11 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   FiUser, FiMail, FiCalendar, FiEdit2, FiClock, 
-  FiSettings, FiLogOut, FiAlertCircle
+  FiSettings, FiLogOut, FiAlertCircle, FiX, FiCheck
 } from 'react-icons/fi';
-import { getCurrentUser, isAuthenticated, logout } from '@/app/api/authApi';
+import { getCurrentUser, isAuthenticated, logout} from '@/app/api/authApi';
+import { updateUsername } from '@/app/api/userApi';
+import { updateAvatar, getAvatars, Avatar } from '@/app/api/userApi';
 
 // Animation variants
 const containerVariants = {
@@ -31,12 +33,38 @@ const itemVariants = {
   }
 };
 
+// Define a proper interface for user data
+interface User {
+  id?: string;
+  username?: string;
+  email?: string;
+  avatar?: string;
+  fullName?: string;
+  role?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: any; // For any other properties that might exist
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'overview' | 'watchlist' | 'history' | 'settings'>('overview');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<User | null>(null);
+  const [avatars, setAvatars] = useState<Avatar[]>([]);
+  const [isLoadingAvatars, setIsLoadingAvatars] = useState(false);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
+  const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
+  const [updateSuccess, setUpdateSuccess] = useState(false);
+
+  // Username state
+  const [showUsernameModal, setShowUsernameModal] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
+  const [isUpdatingUsername, setIsUpdatingUsername] = useState(false);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [usernameSuccess, setUsernameSuccess] = useState(false);
 
   // Kiểm tra trạng thái đăng nhập và lấy thông tin người dùng
   useEffect(() => {
@@ -57,6 +85,7 @@ export default function ProfilePage() {
         const userResponse = await getCurrentUser();
         if (userResponse.data && userResponse.data.user) {
           setUserData(userResponse.data.user);
+          setSelectedAvatar(userResponse.data.user.avatar || null);
         } else {
           setError('Không thể tải thông tin người dùng');
         }
@@ -70,6 +99,115 @@ export default function ProfilePage() {
 
     checkAuthAndGetUser();
   }, [router]);
+
+  // Lấy danh sách avatars
+  useEffect(() => {
+    const fetchAvatars = async () => {
+      try {
+        setIsLoadingAvatars(true);
+        const response = await getAvatars();
+        if (response.success && response.data) {
+          setAvatars(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching avatars:', error);
+      } finally {
+        setIsLoadingAvatars(false);
+      }
+    };
+
+    // Nếu người dùng mở modal chọn avatar thì mới fetch
+    if (showAvatarModal) {
+      fetchAvatars();
+    }
+  }, [showAvatarModal]);
+
+  // Tạo danh sách avatar mặc định nếu API không trả về
+  useEffect(() => {
+    if (showAvatarModal && avatars.length === 0 && !isLoadingAvatars) {
+      // Create default avatars (1-12)
+      const defaultAvatars = Array.from({ length: 12 }, (_, i) => ({
+        id: i + 1,
+        path: `/avatars/avatar-${i + 1}.png`
+      }));
+      setAvatars(defaultAvatars);
+    }
+  }, [showAvatarModal, avatars, isLoadingAvatars]);
+
+  // Xử lý cập nhật avatar
+  const handleUpdateAvatar = async (avatarPath: string) => {
+    try {
+      setIsUpdatingAvatar(true);
+      setUpdateSuccess(false);
+      
+      const response = await updateAvatar(avatarPath);
+      
+      if (response.success && response.data) {
+        // Cập nhật userData với avatar mới
+        setUserData((prev: User | null) => ({
+          ...prev,
+          avatar: avatarPath
+        }));
+        setSelectedAvatar(avatarPath);
+        setUpdateSuccess(true);
+        
+        // Đóng modal sau 1 giây
+        setTimeout(() => {
+          setShowAvatarModal(false);
+          setUpdateSuccess(false);
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('Error updating avatar:', error);
+      setError('Không thể cập nhật avatar, vui lòng thử lại sau');
+    } finally {
+      setIsUpdatingAvatar(false);
+    }
+  };
+
+  // Xử lý cập nhật username
+  const handleUpdateUsername = async () => {
+    // Reset states
+    setUsernameError(null);
+    setUsernameSuccess(false);
+    
+    // Validate
+    if (!newUsername || newUsername.trim().length < 3) {
+      setUsernameError('Username phải có ít nhất 3 ký tự');
+      return;
+    }
+    
+    // Don't update if username is the same
+    if (newUsername === userData?.username) {
+      setShowUsernameModal(false);
+      return;
+    }
+    
+    setIsUpdatingUsername(true);
+    
+    try {
+      const response = await updateUsername(newUsername);
+      
+      if (response.success) {
+        // Update local state
+        setUserData((prev: User | null) => ({
+          ...prev,
+          username: newUsername
+        }));
+        setUsernameSuccess(true);
+        
+        // Hide modal after 1.5 seconds
+        setTimeout(() => {
+          setShowUsernameModal(false);
+          setUsernameSuccess(false);
+        }, 1500);
+      }
+    } catch (error: any) {
+      setUsernameError(error.message || 'Không thể cập nhật username');
+    } finally {
+      setIsUpdatingUsername(false);
+    }
+  };
 
   // Xử lý đăng xuất
   const handleLogout = async () => {
@@ -147,7 +285,7 @@ export default function ProfilePage() {
       {/* Hero Section with User Info */}
       <div className="relative mb-12">
         {/* Background Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl h-64 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-red-800 to-black rounded-xl h-64 overflow-hidden">
           <div className="absolute inset-0 bg-black opacity-50"></div>
           <div className="absolute inset-0 bg-[url('/images/pattern.svg')] opacity-20"></div>
         </div>
@@ -160,7 +298,7 @@ export default function ProfilePage() {
             transition={{ type: 'spring', stiffness: 100 }}
             className="mb-6 md:mb-0 md:mr-8"
           >
-            <div className="relative">
+            <div className="relative group">
               <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-800">
                 {userData.avatar ? (
                   <Image 
@@ -176,11 +314,15 @@ export default function ProfilePage() {
                   </div>
                 )}
               </div>
-              {userData.role === 'premium' && (
-                <div className="absolute -top-2 -right-2 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded-full shadow-lg">
-                  PREMIUM
-                </div>
-              )}
+              
+              {/* Edit avatar button */}
+              <button 
+                onClick={() => setShowAvatarModal(true)}
+                className="absolute bottom-0 right-0 p-2 bg-red-600 rounded-full text-white shadow-lg transition-transform transform scale-0 group-hover:scale-100 hover:bg-red-700"
+                title="Thay đổi avatar"
+              >
+                <FiEdit2 size={18} />
+              </button>
             </div>
           </motion.div>
           
@@ -210,7 +352,8 @@ export default function ProfilePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="mt-4 md:mt-0 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg flex items-center transition-colors"
+            className="mt-4 md:mt-0 px-4 text-white py-2 bg-red-900/30 hover:bg-red-900/50 backdrop-blur-sm rounded-lg flex items-center transition-colors"
+            onClick={() => setShowUsernameModal(true)}
           >
             <FiEdit2 className="mr-2" />
             Chỉnh sửa
@@ -218,6 +361,163 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Modal chọn avatar */}
+      {showAvatarModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="bg-gray-900 rounded-xl p-6 max-w-md w-full mx-4 relative"
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-white">Chọn avatar</h3>
+              <button 
+                onClick={() => setShowAvatarModal(false)}
+                className="p-1 hover:bg-gray-800 rounded-full text-gray-400 hover:text-white"
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+            
+            {isLoadingAvatars ? (
+              <div className="flex justify-center py-8">
+                <div className="w-10 h-10 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 mt-4">
+                {avatars.map((avatar) => (
+                  <button 
+                    key={avatar.id}
+                    onClick={() => handleUpdateAvatar(avatar.path)}
+                    disabled={isUpdatingAvatar}
+                    className={`relative p-1 rounded-full overflow-hidden transition-all ${
+                      selectedAvatar === avatar.path 
+                        ? 'ring-2 ring-red-600 ring-offset-1 ring-offset-gray-900' 
+                        : 'hover:ring-2 hover:ring-gray-600 hover:ring-offset-1 hover:ring-offset-gray-900'
+                    }`}
+                  >
+                    <div className="relative w-full pb-[100%]">
+                      <Image 
+                        src={avatar.path} 
+                        alt={`Avatar ${avatar.id}`}
+                        fill
+                        className="object-cover rounded-full"
+                      />
+                      
+                      {/* Selected indicator */}
+                      {selectedAvatar === avatar.path && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-opacity-40">
+                          <FiCheck className="text-red-500 text-xl" />
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            
+            {/* Success message */}
+            {updateSuccess && (
+              <div className="mt-4 p-2 bg-green-500 bg-opacity-10 border border-green-500 rounded-lg text-green-400 flex items-center">
+                <FiCheck className="mr-2" /> Avatar đã được cập nhật thành công!
+              </div>
+            )}
+            
+            {/* Error message */}
+            {error && error.includes('avatar') && (
+              <div className="mt-4 p-2 bg-red-500 bg-opacity-20 border border-red-500 rounded-lg text-red-400">
+                {error}
+              </div>
+            )}
+            
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setShowAvatarModal(false)}
+                className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Đóng
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+      
+      {/* Modal cập nhật username */}
+      {showUsernameModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="bg-gray-900 rounded-xl p-6 max-w-md w-full mx-4 relative"
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-white">Cập nhật tên người dùng</h3>
+              <button 
+                onClick={() => setShowUsernameModal(false)}
+                className="p-1 hover:bg-gray-800 rounded-full text-gray-400 hover:text-white"
+              >
+                <FiX size={24} />
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
+                Tên người dùng mới
+              </label>
+              <input
+                type="text"
+                id="username"
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value)}
+                placeholder={userData?.username || 'Nhập tên người dùng mới'}
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                disabled={isUpdatingUsername}
+              />
+              {usernameError && (
+                <p className="mt-2 text-sm text-red-500">{usernameError}</p>
+              )}
+            </div>
+            
+            {/* Success message */}
+            {usernameSuccess && (
+              <div className="mt-4 p-2 bg-green-500 bg-opacity-20 border border-green-500 rounded-lg text-green-400 flex items-center">
+                <FiCheck className="mr-2" /> Tên người dùng đã được cập nhật thành công!
+              </div>
+            )}
+            
+            <div className="mt-6 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowUsernameModal(false)}
+                className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                disabled={isUpdatingUsername}
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleUpdateUsername}
+                disabled={isUpdatingUsername || !newUsername || newUsername.length < 3}
+                className={`px-4 py-2 rounded-lg text-white flex items-center ${
+                  isUpdatingUsername || !newUsername || newUsername.length < 3
+                    ? 'bg-gray-700 cursor-not-allowed'
+                    : 'bg-red-600 hover:bg-red-700'
+                }`}
+              >
+                {isUpdatingUsername ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Đang cập nhật...
+                  </>
+                ) : (
+                  'Cập nhật'
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+      
       {/* Tabs */}
       <div className="mb-8">
         <div className="border-b border-gray-700 flex overflow-x-auto">
@@ -266,29 +566,128 @@ export default function ProfilePage() {
 
       {/* Tab Content */}
       {activeTab === 'overview' && (
-        <div className="mb-8">
-          <div className="bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-gray-700 mb-8">
-            <h2 className="text-xl font-semibold text-white mb-4">Thông tin tài khoản</h2>
+        <div className="mb-8 space-y-6">
+          {/* Hoạt động gần đây */}
+          <div className="bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
+            <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
+              <FiClock className="mr-2 text-red-500" /> Hoạt động gần đây
+            </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-gray-400 text-sm mb-1">Tên người dùng</h3>
-                <p className="text-white">{userData.username || 'N/A'}</p>
+            <div className="space-y-4">
+              {/* Placeholder for recent activities */}
+              <div className="p-4 bg-gray-900/80 rounded-lg border border-gray-700 flex items-center">
+                <div className="w-12 h-12 rounded-md overflow-hidden mr-4 flex-shrink-0">
+                  <div className="w-full h-full bg-gray-700 flex items-center justify-center">
+                    <span className="text-2xl">🎬</span>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <p className="text-white font-medium">Đã xem <span className="text-red-500">Inception</span></p>
+                  <p className="text-gray-400 text-sm">3 giờ trước</p>
+                </div>
               </div>
               
-              <div>
-                <h3 className="text-gray-400 text-sm mb-1">Email</h3>
-                <p className="text-white">{userData.email || 'N/A'}</p>
+              <div className="p-4 bg-gray-900/80 rounded-lg border border-gray-700 flex items-center">
+                <div className="w-12 h-12 rounded-md overflow-hidden mr-4 flex-shrink-0">
+                  <div className="w-full h-full bg-gray-700 flex items-center justify-center">
+                    <span className="text-2xl">⭐</span>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <p className="text-white font-medium">Đã đánh giá <span className="text-red-500">The Dark Knight</span></p>
+                  <p className="text-gray-400 text-sm">Hôm qua</p>
+                </div>
               </div>
-              
-              <div>
-                <h3 className="text-gray-400 text-sm mb-1">Ngày tham gia</h3>
-                <p className="text-white">{userData.createdAt ? formatDate(userData.createdAt) : 'N/A'}</p>
+
+              <div className="p-4 bg-gray-900/80 rounded-lg border border-gray-700 flex items-center">
+                <div className="w-12 h-12 rounded-md overflow-hidden mr-4 flex-shrink-0">
+                  <div className="w-full h-full bg-gray-700 flex items-center justify-center">
+                    <span className="text-2xl">📌</span>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <p className="text-white font-medium">Đã thêm <span className="text-red-500">The Godfather</span> vào danh sách xem</p>
+                  <p className="text-gray-400 text-sm">3 ngày trước</p>
+                </div>
               </div>
+            </div>
+          </div>
+          
+          {/* Thống kê phim */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
+              <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
+                <FiUser className="mr-2 text-red-500" /> Thống kê phim
+              </h2>
               
-              <div>
-                <h3 className="text-gray-400 text-sm mb-1">Loại tài khoản</h3>
-                <p className="text-white capitalize">{userData.role || 'Chuẩn'}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-900/80 rounded-lg p-4 border border-gray-700">
+                  <h3 className="text-gray-400 text-sm mb-1">Đã xem</h3>
+                  <p className="text-white text-2xl font-bold">24</p>
+                </div>
+                
+                <div className="bg-gray-900/80 rounded-lg p-4 border border-gray-700">
+                  <h3 className="text-gray-400 text-sm mb-1">Đã đánh giá</h3>
+                  <p className="text-white text-2xl font-bold">18</p>
+                </div>
+                
+                <div className="bg-gray-900/80 rounded-lg p-4 border border-gray-700">
+                  <h3 className="text-gray-400 text-sm mb-1">Danh sách xem</h3>
+                  <p className="text-white text-2xl font-bold">7</p>
+                </div>
+                
+                <div className="bg-gray-900/80 rounded-lg p-4 border border-gray-700">
+                  <h3 className="text-gray-400 text-sm mb-1">Yêu thích</h3>
+                  <p className="text-white text-2xl font-bold">12</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
+              <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
+                <FiSettings className="mr-2 text-red-500" /> Thể loại yêu thích
+              </h2>
+              
+              <div className="space-y-3">
+                <div className="relative pt-1">
+                  <div className="flex justify-between mb-1">
+                    <span className="text-white">Hành động</span>
+                    <span className="text-gray-400 text-sm">42%</span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div className="bg-gradient-to-r from-red-600 to-red-400 h-2 rounded-full" style={{ width: '42%' }}></div>
+                  </div>
+                </div>
+                
+                <div className="relative pt-1">
+                  <div className="flex justify-between mb-1">
+                    <span className="text-white">Khoa học viễn tưởng</span>
+                    <span className="text-gray-400 text-sm">28%</span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div className="bg-gradient-to-r from-red-600 to-red-400 h-2 rounded-full" style={{ width: '28%' }}></div>
+                  </div>
+                </div>
+                
+                <div className="relative pt-1">
+                  <div className="flex justify-between mb-1">
+                    <span className="text-white">Kinh dị</span>
+                    <span className="text-gray-400 text-sm">15%</span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div className="bg-gradient-to-r from-red-600 to-red-400 h-2 rounded-full" style={{ width: '15%' }}></div>
+                  </div>
+                </div>
+                
+                <div className="relative pt-1">
+                  <div className="flex justify-between mb-1">
+                    <span className="text-white">Lãng mạn</span>
+                    <span className="text-gray-400 text-sm">10%</span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div className="bg-gradient-to-r from-red-600 to-red-400 h-2 rounded-full" style={{ width: '10%' }}></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

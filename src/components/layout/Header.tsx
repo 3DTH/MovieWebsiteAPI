@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiSearch, FiMenu, FiX, FiUser, FiBell, FiLogIn, FiLogOut } from 'react-icons/fi';
+import { FiSearch, FiMenu, FiX, FiBell, FiLogIn, FiLogOut, FiUser } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Header: React.FC = () => {
@@ -118,8 +118,20 @@ const Header: React.FC = () => {
                   className="relative"
                 >
                   <Link href="/profile" className="text-gray-200 hover:text-red-500 transition-colors flex items-center">
-                    <FiUser className="h-5 w-5" />
-                    {user && <span className="ml-1 text-sm font-semibold">{user.username}</span>}
+                    {user && user.avatar ? (
+                      <div className="h-8 w-8 rounded-full overflow-hidden border-2 border-gray-300">
+                        <Image 
+                          src={user.avatar} 
+                          alt={user.username || 'User avatar'}
+                          width={32}
+                          height={32}
+                          className="object-cover h-full w-full"
+                        />
+                      </div>
+                    ) : (
+                      <FiUser className="h-5 w-5" />
+                    )}
+                    {user && <span className="ml-2 text-sm font-semibold">{user.username}</span>}
                   </Link>
                 </motion.div>
 
@@ -260,8 +272,20 @@ const Header: React.FC = () => {
                       className="flex items-center py-2 text-base font-medium text-gray-200 hover:text-red-500"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <FiUser className="mr-3 h-5 w-5" />
-                      Tài khoản
+                      {user && user.avatar ? (
+                        <div className="h-8 w-8 rounded-full overflow-hidden border-2 border-gray-300">
+                          <Image 
+                            src={user.avatar} 
+                            alt={user.username || 'User avatar'}
+                            width={32}
+                            height={32}
+                            className="object-cover h-full w-full"
+                          />
+                        </div>
+                      ) : (
+                        <FiUser className="mr-3 h-5 w-5" />
+                      )}
+                      {user && <span className="ml-2 text-sm font-semibold">{user.username}</span>}
                     </Link>
                     
                     <button

@@ -6,6 +6,8 @@ export interface User {
   username: string;
   email: string;
   role: 'user' | 'admin';
+  avatar?: string;
+  createdAt?: string;
 }
 
 export interface AuthResponse {
@@ -35,7 +37,7 @@ export const login = async (loginData: LoginData) => {
   return api.post<AuthResponse>('/auth/login', loginData);
 };
 
-// Lấy thông tin người dùng hiện tại (dựa vào token)
+// Lấy thông tin người dùng hiện tại (từ API thay vì giải mã token)
 export const getCurrentUser = async (): Promise<{
   data: {
     success: boolean;
@@ -47,33 +49,61 @@ export const getCurrentUser = async (): Promise<{
     throw new Error('No token found');
   }
   
-  // Giải mã JWT để lấy thông tin user (chỉ lấy payload)
   try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
-
-    const userData = JSON.parse(jsonPayload);
+    // Gửi request đến endpoint /auth/me để lấy thông tin người dùng mới nhất
+    const response = await api.get('/auth/me');
     
-    // Trả về định dạng tương tự response từ API để code khác không phải thay đổi
-    return {
-      data: {
-        success: true,
-        user: {
-          id: userData.id,
-          username: userData.username || userData.email,
-          email: userData.email,
-          role: userData.role || 'user'
+    if (response.data && response.data.success) {
+      return {
+        data: {
+          success: true,
+          user: {
+            id: response.data.user._id,
+            username: response.data.user.username,
+            email: response.data.user.email,
+            role: response.data.user.role,
+            avatar: response.data.user.avatar,
+            createdAt: response.data.user.createdAt
+          }
         }
-      }
-    };
+      };
+    } else {
+      throw new Error('Failed to fetch user data');
+    }
   } catch (error) {
-    throw new Error('Invalid token');
+    console.error("Error fetching current user:", error);
+    
+    // Fallback: nếu API không thành công, giải mã token như cũ
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+  
+      const userData = JSON.parse(jsonPayload);
+      console.log("Fallback to token data:", userData);
+      
+      return {
+        data: {
+          success: true,
+          user: {
+            id: userData.id,
+            username: userData.username || userData.email,
+            email: userData.email,
+            role: userData.role || 'user',
+            avatar: userData.avatar || null,
+            createdAt: userData.createdAt || null
+          }
+        }
+      };
+    } catch (decodeError) {
+      console.error("Error decoding token:", decodeError);
+      throw new Error('Invalid token');
+    }
   }
 };
 
