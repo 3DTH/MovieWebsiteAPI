@@ -60,10 +60,10 @@ exports.getUsers = async (req, res, next) => {
 // Cập nhật user
 exports.updateUser = async (req, res, next) => {
     try {
-        const { username, email, role } = req.body;
+        const { username, email, role, avatar } = req.body;
         const user = await User.findByIdAndUpdate(
             req.params.id,
-            { username, email, role },
+            { username, email, role, avatar },
             { new: true, runValidators: true }
         ).select('-password');
 
@@ -74,6 +74,94 @@ exports.updateUser = async (req, res, next) => {
         res.json({
             success: true,
             data: user
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Cập nhật avatar người dùng
+exports.updateAvatar = async (req, res, next) => {
+    try {
+        const { avatarPath } = req.body;
+        
+        // Kiểm tra nếu avatarPath không hợp lệ
+        if (!avatarPath || !avatarPath.startsWith('/avatars/avatar-')) {
+            return next(new ErrorResponse('Đường dẫn avatar không hợp lệ', 400));
+        }
+        
+        // Cập nhật avatar cho người dùng hiện tại
+        const user = await User.findByIdAndUpdate(
+            req.user.id,
+            { avatar: avatarPath },
+            { new: true, runValidators: true }
+        ).select('-password');
+
+        if (!user) {
+            return next(new ErrorResponse('Không tìm thấy user', 404));
+        }
+
+        res.json({
+            success: true,
+            data: user
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Cập nhật username người dùng
+exports.updateUsername = async (req, res, next) => {
+    try {
+        const { username } = req.body;
+        
+        // Kiểm tra username có hợp lệ không
+        if (!username || username.trim().length < 3) {
+            return next(new ErrorResponse('Username phải có ít nhất 3 ký tự', 400));
+        }
+
+        // Kiểm tra username đã tồn tại chưa (loại trừ user hiện tại)
+        const existingUser = await User.findOne({ 
+            username: username,
+            _id: { $ne: req.user.id } 
+        });
+        
+        if (existingUser) {
+            return next(new ErrorResponse('Username đã được sử dụng bởi người dùng khác', 400));
+        }
+        
+        // Cập nhật username
+        const user = await User.findByIdAndUpdate(
+            req.user.id,
+            { username: username },
+            { new: true, runValidators: true }
+        ).select('-password');
+
+        if (!user) {
+            return next(new ErrorResponse('Không tìm thấy user', 404));
+        }
+
+        res.json({
+            success: true,
+            data: user
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Lấy danh sách avatar có sẵn
+exports.getAvatars = async (req, res, next) => {
+    try {
+        // Tạo danh sách đường dẫn cho 10 avatar
+        const avatars = Array.from({ length: 10 }, (_, i) => ({
+            id: i + 1,
+            path: `/avatars/avatar-${i + 1}.png`
+        }));
+
+        res.json({
+            success: true,
+            data: avatars
         });
     } catch (error) {
         next(error);

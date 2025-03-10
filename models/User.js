@@ -31,6 +31,14 @@ const userSchema = new mongoose.Schema({
         unique: true,
         sparse: true
     },
+    avatar: {
+        type: String,
+        default: function() {
+            // Assign a random avatar from 1 to 10
+            const randomNum = Math.floor(Math.random() * 12) + 1;
+            return `/avatars/avatar-${randomNum}.png`;
+        }
+    },
     role: {
         type: String,
         enum: ['user', 'admin'],

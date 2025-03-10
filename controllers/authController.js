@@ -11,7 +11,9 @@ const createTokenResponse = (user) => {
             id: user._id,
             email: user.email,
             username: user.username,
-            role: user.role
+            role: user.role,
+            avatar: user.avatar,
+            createdAt: user.createdAt
         }, 
         process.env.JWT_SECRET, 
         {
@@ -26,10 +28,15 @@ const createTokenResponse = (user) => {
             id: user._id,
             username: user.username,
             email: user.email,
-            role: user.role
+            role: user.role,
+            avatar: user.avatar,
+            createdAt: user.createdAt
         }
     };
 };
+
+// Chia sẻ helper function
+exports.createTokenResponse = createTokenResponse;
 
 exports.register = async (req, res, next) => {
     try {
@@ -78,6 +85,25 @@ exports.login = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
+};
+
+// Lấy thông tin người dùng hiện tại
+exports.getMe = async (req, res, next) => {
+  try {
+    // req.user.id có sẵn từ middleware auth.protect
+    const user = await User.findById(req.user.id).select('-password');
+    
+    if (!user) {
+      return next(new ErrorResponse('Không tìm thấy người dùng', 404));
+    }
+    
+    res.status(200).json({
+      success: true,
+      user
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 // Google OAuth routes
