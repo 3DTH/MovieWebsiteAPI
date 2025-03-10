@@ -8,6 +8,7 @@ import Filter from '@/components/ui/Filter';
 import MovieCard from '@/components/ui/MovieCard';
 import MovieListItem from '@/components/ui/MovieListItem';
 import MovieGridCard from '@/components/ui/MovieGridCard';
+import { getMovies, Movie, MovieResponse } from '@/app/api/movieApi';
 
 // Sample data - replace with your actual API calls
 const genres = [
@@ -59,19 +60,21 @@ const types = [
   { id: 'new', name: 'Phim mới' },
 ];
 
-// Đoạn code này chỉ để tao dữ liệu mẫu các phim
-const sampleMovies = Array(100).fill(null).map((_, index) => ({
-  id: `movie-${index}`,
-  title: `Movie Title ${index + 1}`,
-  poster: `/images/placeholder-${(index % 5) + 1}.jpg`,
-  year: 2023 - (index % 5),
-  rating: (Math.random() * 2 + 3).toFixed(1),
-  duration: `${Math.floor(Math.random() * 60) + 90} min`,
-  type: index % 3 === 0 ? 'series' : 'movie',
-  isNew: index % 7 === 0,
-  genres: [genres[index % genres.length].id, genres[(index + 2) % genres.length].id],
-  country: countries[index % countries.length].id,
-}));
+// Thêm các dữ liệu mẫu cho ratings và versions
+const ratings = [
+  { id: 'p', name: 'P (Mọi lứa tuổi)' },
+  { id: 'k', name: 'K (Dưới 13 tuổi)' },
+  { id: 't13', name: 'T13 (13 tuổi trở lên)' },
+  { id: 't16', name: 'T16 (16 tuổi trở lên)' },
+  { id: 't18', name: 'T18 (18 tuổi trở lên)' },
+];
+
+const versions = [
+  { id: 'sub', name: 'Phụ đề' },
+  { id: 'dub', name: 'Lồng tiếng' },
+  { id: 'thuyetminh_bac', name: 'Thuyết minh giọng Bắc' },
+  { id: 'thuyetminh_nam', name: 'Thuyết minh giọng Nam' },
+];
 
 type ViewMode = 'grid' | 'list' | 'masonry';
 
@@ -80,27 +83,15 @@ const MoviesPage = () => {
   const typeFromUrl = searchParams.get('type');
   
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [movies, setMovies] = useState(sampleMovies);
-  const [filteredMovies, setFilteredMovies] = useState(sampleMovies);
-  const [isLoading, setIsLoading] = useState(false);
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   // Add pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [moviesPerPage] = useState(30);
-  // Thêm các dữ liệu mẫu cho ratings và versions
-  const ratings = [
-    { id: 'p', name: 'P (Mọi lứa tuổi)' },
-    { id: 'k', name: 'K (Dưới 13 tuổi)' },
-    { id: 't13', name: 'T13 (13 tuổi trở lên)' },
-    { id: 't16', name: 'T16 (16 tuổi trở lên)' },
-    { id: 't18', name: 'T18 (18 tuổi trở lên)' },
-  ];
-
-  const versions = [
-    { id: 'sub', name: 'Phụ đề' },
-    { id: 'dub', name: 'Lồng tiếng' },
-    { id: 'thuyetminh_bac', name: 'Thuyết minh giọng Bắc' },
-    { id: 'thuyetminh_nam', name: 'Thuyết minh giọng Nam' },
-  ];
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalResults, setTotalResults] = useState(0);
+  
   const [activeFilters, setActiveFilters] = useState({
     genres: [] as string[],
     years: [] as string[],
@@ -110,6 +101,7 @@ const MoviesPage = () => {
     rating: 'all',
     version: 'all',
   });
+
   // Effect to handle URL params for type filter
   useEffect(() => {
     if (typeFromUrl) {
@@ -119,6 +111,29 @@ const MoviesPage = () => {
       }));
     }
   }, [typeFromUrl]);
+
+  // Fetch movies from API
+  useEffect(() => {
+    const fetchMovies = async () => {
+      setIsLoading(true);
+      try {
+        const response = await getMovies(currentPage, moviesPerPage);
+        if (response.data.success) {
+          setMovies(response.data.data);
+          setFilteredMovies(response.data.data);
+          setTotalPages(response.data.totalPages || 1);
+          setTotalResults(response.data.total || response.data.data.length);
+        }
+      } catch (error) {
+        console.error('Error fetching movies:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMovies();
+  }, [currentPage, moviesPerPage]);
+  
   // Effect to apply filters
   useEffect(() => {
     setIsLoading(true);
@@ -130,53 +145,54 @@ const MoviesPage = () => {
       // Filter by type
       if (activeFilters.type !== 'all') {
         if (activeFilters.type === 'new') {
-          results = results.filter(movie => movie.isNew);
+          // For now, we'll consider movies from the last year as "new"
+          const oneYearAgo = new Date();
+          oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+          results = results.filter(movie => {
+            const releaseDate = new Date(movie.releaseDate);
+            return releaseDate >= oneYearAgo;
+          });
         } else {
-          results = results.filter(movie => movie.type === activeFilters.type);
+          // This would need to be adjusted based on your actual data structure
+          // For now, we'll assume all are movies (not series)
+          results = results;
         }
       }
       
-      // Filter by genres
+      // Filter by genres - would need to be adjusted based on your data structure
       if (activeFilters.genres.length > 0) {
         results = results.filter(movie => 
-          movie.genres.some(genre => activeFilters.genres.includes(genre))
+          movie.genres.some(genre => activeFilters.genres.includes(genre.id.toString()))
         );
       }
       
       // Filter by years
       if (activeFilters.years.length > 0) {
         results = results.filter(movie => {
-          const yearStr = movie.year.toString();
+          const releaseYear = new Date(movie.releaseDate).getFullYear();
           return activeFilters.years.some(yearFilter => {
             if (yearFilter.includes('-')) {
               const [start, end] = yearFilter.split('-').map(Number);
-              return movie.year >= start && movie.year <= end;
+              return releaseYear >= start && releaseYear <= end;
             }
             if (yearFilter === 'before-2000') {
-              return movie.year < 2000;
+              return releaseYear < 2000;
             }
-            return yearStr === yearFilter;
+            return releaseYear.toString() === yearFilter;
           });
         });
-      }
-      
-      // Filter by countries
-      if (activeFilters.countries.length > 0) {
-        results = results.filter(movie => 
-          activeFilters.countries.includes(movie.country)
-        );
       }
       
       // Sort results
       switch (activeFilters.sort) {
         case 'newest':
-          results.sort((a, b) => b.year - a.year);
+          results.sort((a, b) => new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime());
           break;
         case 'popular':
-          results.sort(() => Math.random() - 0.5); // Random for demo
+          results.sort((a, b) => b.popularity - a.popularity);
           break;
         case 'rating':
-          results.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
+          results.sort((a, b) => b.voteAverage - a.voteAverage);
           break;
         case 'name-asc':
           results.sort((a, b) => a.title.localeCompare(b.title));
@@ -192,6 +208,7 @@ const MoviesPage = () => {
     
     return () => clearTimeout(timer);
   }, [activeFilters, movies]);
+
   // Cập nhật hàm handleFilterChange để phù hợp với cấu trúc mới
   const handleFilterChange = (filters: {
     genres: string;
@@ -212,6 +229,7 @@ const MoviesPage = () => {
       version: filters.version
     });
   };
+
   // Add function to handle page changes
   const handlePageChange = (pageNumber: number) => {
     // Only change page if it's different
@@ -223,11 +241,12 @@ const MoviesPage = () => {
       });
     }
   };
+
   // Calculate pagination values
   const indexOfLastMovie = currentPage * moviesPerPage;
   const indexOfFirstMovie = indexOfLastMovie - moviesPerPage;
   const currentMovies = filteredMovies.slice(indexOfFirstMovie, indexOfLastMovie);
-  const totalPages = Math.ceil(filteredMovies.length / moviesPerPage);
+
   // Modify renderMovies function to use currentMovies instead of filteredMovies
   const renderMovies = () => {
     if (isLoading) {
@@ -259,7 +278,7 @@ const MoviesPage = () => {
           {viewMode === 'grid' && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
               {currentMovies.map(movie => (
-                <MovieCard key={movie.id} movie={movie} />
+                <MovieCard key={movie._id} movie={movie} />
               ))}
             </div>
           )}
@@ -267,7 +286,7 @@ const MoviesPage = () => {
           {viewMode === 'list' && (
             <div className="space-y-4">
               {currentMovies.map(movie => (
-                <MovieListItem key={movie.id} movie={movie} />
+                <MovieListItem key={movie._id} movie={movie} />
               ))}
             </div>
           )}
@@ -275,8 +294,11 @@ const MoviesPage = () => {
           {viewMode === 'masonry' && (
             <div className="columns-2 sm:columns-3 md:columns-4 gap-4 space-y-4">
               {currentMovies.map(movie => (
-                <div key={movie.id} className="break-inside-avoid">
-                  <MovieGridCard movie={movie} height={Math.floor(Math.random() * 100) + 350} />
+                <div key={movie._id} className="break-inside-avoid">
+                  <MovieGridCard 
+                    movie={movie} 
+                    height={Math.floor(Math.random() * 100) + 350} 
+                  />
                 </div>
               ))}
             </div>
@@ -285,6 +307,7 @@ const MoviesPage = () => {
       </AnimatePresence>
     );
   };
+
   // Add pagination component
   const renderPagination = () => {
     if (totalPages <= 1) return null;
@@ -385,6 +408,7 @@ const MoviesPage = () => {
       </div>
     );
   };
+  
   // Update the return statement to include pagination
   return (
     <div className="container mx-auto px-4 py-8">
@@ -479,7 +503,7 @@ const MoviesPage = () => {
       {/* Add page info */}
       {filteredMovies.length > 0 && (
         <div className="mt-4 text-center text-sm text-gray-400">
-          Hiển thị {indexOfFirstMovie + 1}-{Math.min(indexOfLastMovie, filteredMovies.length)} trong số {filteredMovies.length} phim
+          Hiển thị {indexOfFirstMovie + 1}-{Math.min(indexOfLastMovie, filteredMovies.length)} trong số {totalResults} phim
         </div>
       )}
     </div>

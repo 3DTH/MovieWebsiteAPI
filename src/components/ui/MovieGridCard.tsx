@@ -1,76 +1,68 @@
-"use client";
-
 import React from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
-import { FiStar, FiPlay } from 'react-icons/fi';
+import Link from 'next/link';
+import { FiStar } from 'react-icons/fi';
+import { Movie } from '@/app/api/movieApi';
 
 interface MovieGridCardProps {
-  movie: {
-    id: string;
-    title: string;
-    poster: string;
-    year: number;
-    rating: string;
-    type: string;
-    isNew: boolean;
-  };
+  movie: Movie;
   height?: number;
 }
 
 const MovieGridCard: React.FC<MovieGridCardProps> = ({ movie, height = 400 }) => {
   return (
-    <Link href={`/movies/${movie.id}`}>
-      <div 
-        className="group relative rounded-lg overflow-hidden mb-4 transition-all duration-300 hover:shadow-lg hover:shadow-red-500/20"
-        style={{ height: `${height}px` }}
-      >
-        <div className="absolute inset-0">
-          <Image 
-            src={movie.poster} 
+    <div 
+      className="group relative overflow-hidden rounded-lg transition-transform duration-300 hover:scale-105"
+      style={{ height: `${height}px` }}
+    >
+      <Link href={`/movies/${movie._id}`}>
+        <div className="relative h-full w-full overflow-hidden rounded-lg">
+          <Image
+            src={`https://image.tmdb.org/t/p/w500${movie.posterPath}`}
             alt={movie.title}
             fill
-            className="object-cover"
-            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
           />
-        </div>
-        
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-300">
+          
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+          
           <div className="absolute bottom-0 left-0 right-0 p-4">
-            <h3 className="text-white font-semibold text-lg group-hover:text-red-500 transition-colors">
-              {movie.title}
-            </h3>
+            <h3 className="text-lg font-semibold text-white">{movie.title}</h3>
             
-            <div className="flex items-center justify-between mt-2">
-              <div className="flex items-center text-yellow-500">
-                <FiStar className="mr-1" />
-                <span>{movie.rating}</span>
-              </div>
-              
-              <span className="text-gray-300">{movie.year}</span>
+            <div className="mt-1 flex items-center text-sm text-gray-300">
+              <FiStar className="mr-1 text-yellow-500" />
+              <span>{movie.voteAverage.toFixed(1)}</span>
+              <span className="mx-2">•</span>
+              <span>{new Date(movie.releaseDate).getFullYear()}</span>
+            </div>
+            
+            <p className="mt-2 text-sm text-gray-300 line-clamp-3">{movie.overview}</p>
+            
+            <div className="mt-3 flex flex-wrap gap-1">
+              {movie.genres.slice(0, 3).map(genre => (
+                <span key={genre.id} className="rounded-full bg-gray-700 px-2 py-1 text-xs">
+                  {genre.name}
+                </span>
+              ))}
             </div>
           </div>
         </div>
-        
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="rounded-full bg-red-600 p-4 transform scale-75 group-hover:scale-100 transition-transform duration-300">
-            <FiPlay className="text-white text-2xl" />
-          </div>
+      </Link>
+      
+      {/* Optional badges */}
+      {movie.voteAverage >= 8 && (
+        <div className="absolute right-2 top-2 rounded bg-yellow-500 px-2 py-1 text-xs font-bold text-black">
+          HOT
         </div>
-        
-        {movie.isNew && (
-          <div className="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-md">
-            MỚI
-          </div>
-        )}
-        
-        {movie.type === 'series' && (
-          <div className="absolute top-3 right-3 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-md">
-            PHIM BỘ
-          </div>
-        )}
-      </div>
-    </Link>
+      )}
+      
+      {new Date(movie.releaseDate) >= new Date(new Date().setMonth(new Date().getMonth() - 3)) && (
+        <div className="absolute left-2 top-2 rounded bg-green-500 px-2 py-1 text-xs font-bold text-black">
+          NEW
+        </div>
+      )}
+    </div>
   );
 };
 

@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FiStar, FiClock, FiPlay } from 'react-icons/fi';
+import { Movie } from '@/app/api/movieApi';
 
 interface MovieProps {
   movie: {
@@ -18,63 +19,56 @@ interface MovieProps {
   };
 }
 
-const MovieCard: React.FC<MovieProps> = ({ movie }) => {
+interface MovieCardProps {
+  movie: Movie;
+}
+
+const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
   return (
-    <Link href={`/movies/${movie.id}`}>
-      <div className="group relative overflow-hidden rounded-lg bg-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl">
-        <div className="aspect-[2/3] relative overflow-hidden">
-          <Image 
-            src={movie.poster} 
+    <div className="group relative overflow-hidden rounded-lg transition-transform duration-300 hover:scale-105">
+      <Link href={`/movies/${movie.tmdbId}`}>
+        <div className="relative aspect-[2/3] overflow-hidden rounded-lg">
+          <Image
+            src={`https://image.tmdb.org/t/p/w500${movie.posterPath}`}
             alt={movie.title}
             fill
-            placeholder="blur"
-            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgZmlsbD0iIzEyMTIxMiIvPjwvc3ZnPg=="
-            className="object-cover transition-transform duration-300 group-hover:scale-110"
-            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 20vw"
-            loading="lazy" 
-            priority={false} 
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
+            priority={false}
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
           
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <div className="rounded-full bg-red-600/80 p-3 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-              <FiPlay className="text-white text-xl" />
-            </div>
-          </div>
-          
-          {movie.isNew && (
-            <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-md">
-              MỚI
-            </div>
-          )}
-          
-          {movie.type === 'series' && (
-            <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-md">
-              PHIM BỘ
-            </div>
-          )}
-        </div>
-        
-        <div className="p-3">
-          <h3 className="text-white font-medium truncate group-hover:text-red-500 transition-colors">
-            {movie.title}
-          </h3>
-          
-          <div className="flex items-center justify-between mt-2 text-sm">
-            <div className="flex items-center text-yellow-500">
-              <FiStar className="mr-1" />
-              <span suppressHydrationWarning>{movie.rating}</span>
-            </div>
-            
-            <div className="flex items-center text-gray-400">
-              <span>{movie.year}</span>
-              <span className="mx-1">•</span>
-              <FiClock className="mr-1" />
-              <span>{movie.duration}</span>
+          <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-4 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+            <h3 className="text-lg font-semibold text-white line-clamp-2">{movie.title}</h3>
+            <div className="mt-1 flex items-center text-sm text-gray-300">
+              <FiStar className="mr-1 text-yellow-500" />
+              <span>{movie.voteAverage.toFixed(1)}</span>
+              <span className="mx-2">•</span>
+              <span>{new Date(movie.releaseDate).getFullYear()}</span>
             </div>
           </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+      
+      <Link href={`/movies/${movie.tmdbId}`}>
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transform rounded-full bg-red-600/80 p-3 opacity-0 transition-opacity duration-300 hover:bg-red-600 group-hover:opacity-100">
+          <FiPlay className="h-6 w-6 text-white" />
+        </div>
+      </Link>
+      
+      {/* Optional badges */}
+      {movie.voteAverage >= 8 && (
+        <div className="absolute right-2 top-2 rounded bg-yellow-500 px-2 py-1 text-xs font-bold text-black">
+          HOT
+        </div>
+      )}
+      
+      {new Date(movie.releaseDate) >= new Date(new Date().setMonth(new Date().getMonth() - 3)) && (
+        <div className="absolute left-2 top-2 rounded bg-green-500 px-2 py-1 text-xs font-bold text-black">
+          NEW
+        </div>
+      )}
+    </div>
   );
 };
 

@@ -1,95 +1,61 @@
-"use client";
-
 import React from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
-import { FiStar, FiClock, FiPlay, FiCalendar, FiFlag } from 'react-icons/fi';
+import Link from 'next/link';
+import { FiStar, FiPlay, FiCalendar, FiInfo } from 'react-icons/fi';
+import { Movie } from '@/app/api/movieApi';
 
-interface MovieProps {
-  movie: {
-    id: string;
-    title: string;
-    poster: string;
-    year: number;
-    rating: string;
-    duration: string;
-    type: string;
-    isNew: boolean;
-    genres: string[];
-    country: string;
-  };
+interface MovieListItemProps {
+  movie: Movie;
 }
 
-const MovieListItem: React.FC<MovieProps> = ({ movie }) => {
+const MovieListItem: React.FC<MovieListItemProps> = ({ movie }) => {
   return (
-    <Link href={`/movies/${movie.id}`}>
-      <div className="group flex bg-gray-800 rounded-lg overflow-hidden hover:bg-gray-700 transition-colors duration-300">
-        <div className="relative w-[120px] h-[180px] flex-shrink-0">
-          <Image 
-            src={movie.poster} 
+    <div className="group relative overflow-hidden rounded-lg bg-gray-800 transition-all duration-300 hover:bg-gray-700">
+      <Link href={`/movies/${movie._id}`} className="flex h-full">
+        <div className="relative h-32 w-24 flex-shrink-0 overflow-hidden sm:h-40 sm:w-28">
+          <Image
+            src={`https://image.tmdb.org/t/p/w500${movie.posterPath}`}
             alt={movie.title}
             fill
+            sizes="(max-width: 768px) 100px, 112px"
             className="object-cover"
-            sizes="120px"
           />
-          
-          {movie.isNew && (
-            <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-md">
-              MỚI
-            </div>
-          )}
         </div>
         
-        <div className="flex-1 p-4 flex flex-col">
-          <div className="flex justify-between items-start">
-            <h3 className="text-lg font-semibold text-white group-hover:text-red-500 transition-colors">
-              {movie.title}
-            </h3>
-            
-            <div className="flex items-center bg-gray-700 px-2 py-1 rounded-md">
-              <FiStar className="text-yellow-500 mr-1" />
-              <span className="text-white">{movie.rating}</span>
-            </div>
+        <div className="flex flex-1 flex-col justify-between p-4">
+          <div>
+            <h3 className="text-lg font-semibold text-white group-hover:text-red-400">{movie.title}</h3>
+            <p className="mt-1 text-sm text-gray-300 line-clamp-2">{movie.overview}</p>
           </div>
           
-          <div className="mt-2 flex items-center text-sm text-gray-400 flex-wrap gap-y-1">
-            <div className="flex items-center mr-4">
-              <FiCalendar className="mr-1" />
-              <span>{movie.year}</span>
-            </div>
-            
-            <div className="flex items-center mr-4">
-              <FiClock className="mr-1" />
-              <span>{movie.duration}</span>
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-400">
+            <div className="flex items-center">
+              <FiStar className="mr-1 text-yellow-500" />
+              <span>{movie.voteAverage.toFixed(1)}</span>
             </div>
             
             <div className="flex items-center">
-              <FiFlag className="mr-1" />
-              <span>{movie.country}</span>
+              <FiCalendar className="mr-1" />
+              <span>{new Date(movie.releaseDate).getFullYear()}</span>
             </div>
             
-            <div className="flex items-center ml-auto">
-              <span className={`px-2 py-1 rounded text-xs font-medium ${
-                movie.type === 'series' ? 'bg-blue-600 text-white' : 'bg-green-600 text-white'
-              }`}>
-                {movie.type === 'series' ? 'Phim bộ' : 'Phim lẻ'}
-              </span>
+            <div className="flex flex-wrap gap-1">
+              {movie.genres.slice(0, 3).map(genre => (
+                <span key={genre.id} className="rounded-full bg-gray-700 px-2 py-1 text-xs">
+                  {genre.name}
+                </span>
+              ))}
             </div>
           </div>
-          
-          <p className="mt-3 text-gray-400 text-sm line-clamp-2">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod, diam quis aliquam ultricies, nisl nunc ultricies nunc, quis ultricies nisl nunc quis ultricies.
-          </p>
-          
-          <div className="mt-auto pt-3 flex items-center">
-            <button className="flex items-center bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors">
-              <FiPlay className="mr-2" />
-              <span>Xem phim</span>
-            </button>
+        </div>
+        
+        <div className="flex items-center justify-center px-4">
+          <div className="rounded-full bg-red-600 p-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+            <FiPlay className="h-5 w-5 text-white" />
           </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </div>
   );
 };
 

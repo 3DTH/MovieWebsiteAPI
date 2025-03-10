@@ -20,13 +20,23 @@ interface MovieCardProps {
 }
 
 const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
+  // Format date function
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('vi-VN', {
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric'
+    }).format(date);
+  };
+
   return (
     <motion.div
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       className="relative group"
     >
-      <Link href={`/movies/${movie._id}`}>
+      <Link href={`/movies/${movie.tmdbId}`}>
         <div className="relative aspect-[2/3] rounded-lg overflow-hidden">
           <Image
             src={`https://image.tmdb.org/t/p/w500${movie.posterPath}`}
@@ -48,7 +58,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
 
             {movie.releaseDate && (
               <div className="text-xs text-gray-300 mt-1">
-                {movie.releaseDate}
+                {formatDate(movie.releaseDate)}
               </div>
             )}
           </div>
@@ -213,7 +223,11 @@ export default function Home() {
                       <span>{movie.voteAverage.toFixed(1)}</span>
                     </div>
                     <span>•</span>
-                    <span>{movie.releaseDate}</span>
+                    <span>{new Intl.DateTimeFormat('vi-VN', {
+                      day: 'numeric',
+                      month: 'numeric', 
+                      year: 'numeric'
+                    }).format(new Date(movie.releaseDate))}</span>
                     <span>•</span>
                     <div className="flex flex-wrap gap-2">
                       {movie.genres.map((genre) => (
@@ -230,7 +244,7 @@ export default function Home() {
                     {movie.overview}
                   </p>
                   <div className="flex flex-wrap gap-4">
-                    <Link href={`/movies/${movie._id}`}>
+                    <Link href={`/movies/${movie.tmdbId}`}>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -239,7 +253,7 @@ export default function Home() {
                         <FiPlay className="mr-2" /> Xem ngay
                       </motion.button>
                     </Link>
-                    <Link href={`/movies/${movie._id}`}>
+                    <Link href={`/movies/${movie.tmdbId}`}>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -444,7 +458,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredMovies.slice(0, 3).map((movie) => (
-              <Link key={movie._id} href={`/movies/${movie._id}`}>
+              <Link key={movie._id} href={`/movies/${movie.tmdbId}`}>
                 <motion.div 
                   whileHover={{ scale: 1.03 }}
                   className="relative h-64 rounded-xl overflow-hidden group"
