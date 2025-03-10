@@ -12,6 +12,7 @@ export interface Actor {
   movies: {
     movie: {
       _id: string;
+      tmdbId: number; 
       title: string;
       posterPath: string;
       releaseDate: string;
