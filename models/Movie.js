@@ -1,34 +1,35 @@
-const mongoose = require('mongoose');
-const moment = require('moment-timezone');
+const mongoose = require("mongoose");
+const moment = require("moment-timezone");
 
 const videoSchema = new mongoose.Schema({
-    key: {
-        type: String,
-        required: true
-    },
-    name: {
-        type: String,
-        required: true
-    },
-    site: {
-        type: String,
-        required: true
-    },
-    type: {
-        type: String,
-        required: true
-    }
+  key: {
+    type: String,
+    required: true,
+  },
+  name: {
+    type: String,
+    required: true,
+  },
+  site: {
+    type: String,
+    required: true,
+  },
+  type: {
+    type: String,
+    required: true,
+  },
 });
 
-const movieSchema = new mongoose.Schema({
+const movieSchema = new mongoose.Schema(
+  {
     tmdbId: {
-        type: Number,
-        required: true,
-        unique: true
+      type: Number,
+      required: true,
+      unique: true,
     },
     title: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     originalTitle: String,
     overview: String,
@@ -39,48 +40,61 @@ const movieSchema = new mongoose.Schema({
     voteCount: Number,
     popularity: Number,
     isPopular: {
-        type: Boolean,
-        default: false
+      type: Boolean,
+      default: false,
     },
     nowPlaying: {
-        type: Boolean,
-        default: false
+      type: Boolean,
+      default: false,
     },
-    genres: [{
+    googleDrive: { // Google Drive video
+        fileId: String,
+        embedUrl: String,
+        uploadedAt: Date
+    },
+    genres: [
+      {
         id: Number,
-        name: String
-    }],
+        name: String,
+      },
+    ],
     videos: [videoSchema],
-    cast: [{
+    cast: [
+      {
         actor: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Actor'
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Actor",
         },
         character: String,
-        order: Number
-    }],
-    directors: [{
+        order: Number,
+      },
+    ],
+    directors: [
+      {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Actor'
-    }],
+        ref: "Actor",
+      },
+    ],
     lastUpdated: {
-        type: Date,
-        default: Date.now
-    }
-}, {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  {
     timestamps: true,
-    toJSON: { 
-        transform: function(doc, ret) {
-            // Chuyển đổi múi giờ sang Asia/Ho_Chi_Minh
-            ret.createdAt = moment(ret.createdAt).tz('Asia/Ho_Chi_Minh').format();
-            ret.updatedAt = moment(ret.updatedAt).tz('Asia/Ho_Chi_Minh').format();
-            return ret;
-        }
-    }
-});
+    toJSON: {
+      transform: function (doc, ret) {
+        // Chuyển đổi múi giờ sang Asia/Ho_Chi_Minh
+        ret.createdAt = moment(ret.createdAt).tz("Asia/Ho_Chi_Minh").format();
+        ret.updatedAt = moment(ret.updatedAt).tz("Asia/Ho_Chi_Minh").format();
+        return ret;
+      },
+    },
+  }
+);
 
 // Index để tăng tốc truy vấn
 movieSchema.index({ tmdbId: 1 });
-movieSchema.index({ title: 'text', overview: 'text' });
+movieSchema.index({ title: "text", overview: "text" });
 
-module.exports = mongoose.model('Movie', movieSchema); 
+module.exports = mongoose.model("Movie", movieSchema);

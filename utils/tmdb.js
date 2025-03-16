@@ -188,7 +188,7 @@ const tmdbApi = {
   },
 };
 
-// Thêm hàm mới để lấy chi tiết diễn viên
+// Thêm hàm mới để lấy chi tiết diễn viên 
 const getActorDetails = async (actorId) => {
   try {
     const response = await axios.get(

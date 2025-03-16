@@ -32,7 +32,7 @@ passport.use(new GoogleStrategy({
                     username: profile.displayName,
                     email: profile.emails[0].value,
                     googleId: profile.id,
-                    password: 'google-oauth' // Thêm password mặc định
+                    password: 'google-oauth' 
                 });
             }
         }
@@ -76,7 +76,7 @@ passport.use(new FacebookStrategy({
                     username: profile.displayName,
                     email: profile.emails[0].value,
                     facebookId: profile.id,
-                    password: 'facebook-oauth' // Thêm password mặc định
+                    password: 'facebook-oauth' 
                 });
             }
         }
