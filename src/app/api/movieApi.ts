@@ -13,9 +13,18 @@ export interface Movie {
   voteAverage: number;
   voteCount: number;
   popularity: number;
-  isPopular?: boolean;
-  nowPlaying?: boolean;
-  genres: { id: number; name: string }[];
+  isPopular: boolean;
+  nowPlaying: boolean;
+  // Add the googleDrive property
+  googleDrive?: {
+    fileId: string;
+    embedUrl: string;
+    uploadedAt: string;
+  };
+  genres: {
+    id: number;
+    name: string;
+  }[];
   videos: {
     key: string;
     name: string;
@@ -25,6 +34,7 @@ export interface Movie {
   cast: {
     actor: {
       _id: string;
+      tmdbId: number;
       name: string;
       profilePath: string;
     };
@@ -33,6 +43,7 @@ export interface Movie {
   }[];
   directors: {
     _id: string;
+    tmdbId: number;
     name: string;
     profilePath: string;
   }[];
@@ -126,6 +137,7 @@ export const syncAllMovies = async () => {
 export const deleteMovie = async (id: string) => {
   return api.delete(`/movies/${id}`);
 };
+
 
 // // Lấy bình luận của phim
 // export const getMovieComments = async (movieId: string, page = 1, limit = 10) => {

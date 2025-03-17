@@ -37,6 +37,7 @@ const formatDate = (dateString: string) => {
 interface MovieCardProps {
   movie: {
     _id: string;
+    tmdbId: number; 
     title: string;
     posterPath: string;
     voteAverage?: number;
@@ -50,7 +51,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
       whileTap={{ scale: 0.95 }}
       className="relative group"
     >
-      <Link href={`/movies/${movie._id}`}>
+      <Link href={`/movies/${movie.tmdbId}`}>
         <div className="relative aspect-[2/3] rounded-lg overflow-hidden">
           <Image
             src={`https://image.tmdb.org/t/p/w500${movie.posterPath}`}
@@ -274,6 +275,17 @@ export default function MovieDetail() {
                     </motion.button>
                   )}
                   
+                  {movie.googleDrive && movie.googleDrive.embedUrl && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => window.location.href = `/movies/${movie.tmdbId}/watch`}
+                      className="flex items-center px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
+                    >
+                      <FiPlay className="mr-2" /> Xem ngay
+                    </motion.button>
+                  )}
+                  
                   <div className="flex gap-2">
                     <motion.button
                       whileHover={{ scale: 1.1 }}
@@ -490,7 +502,7 @@ export default function MovieDetail() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
                     {movie.cast.map((castMember, index) => (
                       <Link 
-                        href={`/actors/${castMember.actor._id}`}
+                        href={`/actors/${castMember.actor.tmdbId}`}
                         key={index} 
                         className="group relative overflow-hidden rounded-lg bg-gradient-to-br from-gray-900 to-gray-800 shadow-lg hover:shadow-xl transition-all duration-300"
                       >
