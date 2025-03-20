@@ -63,7 +63,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
         </div>
       )}
       
-      {new Date(movie.releaseDate) >= new Date(new Date().setMonth(new Date().getMonth() - 3)) && (
+      {new Date(movie.releaseDate) >= new Date(new Date().setMonth(new Date().getMonth() - 1)) && (
         <div className="absolute left-2 top-2 rounded bg-green-500 px-2 py-1 text-xs font-bold text-black">
           NEW
         </div>

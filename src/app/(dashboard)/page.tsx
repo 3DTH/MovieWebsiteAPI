@@ -12,7 +12,7 @@ import {
   FiChevronRight,
   FiChevronLeft,
 } from "react-icons/fi";
-import { getMovies, Movie } from "./api/movieApi";
+import { getMovies, Movie } from "../api/movieApi";
 
 // Movie Card Component
 interface MovieCardProps {

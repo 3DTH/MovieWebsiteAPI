@@ -88,7 +88,7 @@ const MoviesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   // Add pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [moviesPerPage] = useState(30);
+  const [moviesPerPage] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
   
@@ -247,7 +247,6 @@ const MoviesPage = () => {
   const indexOfFirstMovie = indexOfLastMovie - moviesPerPage;
   const currentMovies = filteredMovies.slice(indexOfFirstMovie, indexOfLastMovie);
 
-  // Modify renderMovies function to use currentMovies instead of filteredMovies
   const renderMovies = () => {
     if (isLoading) {
       return (
@@ -277,28 +276,25 @@ const MoviesPage = () => {
         >
           {viewMode === 'grid' && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-              {currentMovies.map(movie => (
+              {filteredMovies.map(movie => (
                 <MovieCard key={movie._id} movie={movie} />
               ))}
             </div>
           )}
-  
+          
           {viewMode === 'list' && (
-            <div className="space-y-4">
-              {currentMovies.map(movie => (
+            <div className="flex flex-col space-y-4">
+              {filteredMovies.map(movie => (
                 <MovieListItem key={movie._id} movie={movie} />
               ))}
             </div>
           )}
-  
+          
           {viewMode === 'masonry' && (
-            <div className="columns-2 sm:columns-3 md:columns-4 gap-4 space-y-4">
-              {currentMovies.map(movie => (
-                <div key={movie._id} className="break-inside-avoid">
-                  <MovieGridCard 
-                    movie={movie} 
-                    height={Math.floor(Math.random() * 100) + 350} 
-                  />
+            <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-6">
+              {filteredMovies.map(movie => (
+                <div key={movie._id} className="mb-6 break-inside-avoid">
+                  <MovieGridCard movie={movie} />
                 </div>
               ))}
             </div>

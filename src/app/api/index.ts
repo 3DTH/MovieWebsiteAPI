@@ -11,7 +11,14 @@ export const api = axios.create({
 
 // Thêm interceptor để xử lý token authentication
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  // Kiểm tra xem request có phải là cho admin không
+  const isAdminRequest = config.url?.includes('/admin/');
+  
+  // Lấy token tương ứng
+  const token = isAdminRequest 
+    ? localStorage.getItem('adminToken') 
+    : localStorage.getItem('token');
+    
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -25,6 +32,12 @@ api.interceptors.response.use(
     // Xử lý các lỗi chung như 401 (Unauthorized)
     if (error.response && error.response.status === 401) {
       // Xử lý logout hoặc refresh token
+      const isAdminRequest = error.config.url?.includes('/admin/');
+      if (isAdminRequest) {
+        localStorage.removeItem('adminToken');
+      } else {
+        localStorage.removeItem('token');
+      }
     }
     return Promise.reject(error);
   }

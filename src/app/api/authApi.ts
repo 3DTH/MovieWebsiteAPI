@@ -22,10 +22,110 @@ export interface RegisterData {
   password: string;
 }
 
+// Thêm các hàm này vào cuối file authApi.ts
+
+// Định nghĩa kiểu dữ liệu cho đăng nhập
 export interface LoginData {
   email: string;
   password: string;
 }
+
+// Đăng nhập với tài khoản admin
+export const loginAdmin = async (data: LoginData) => {
+  try {
+    // Sửa đường dẫn API cho đúng với backend
+    const response = await api.post('/auth/login', data);
+    
+    // Kiểm tra role của người dùng
+    if (response.data && response.data.success) {
+      const userData = response.data.user || {};
+      
+      // Nếu không phải admin, trả về lỗi
+      if (userData.role !== 'admin') {
+        return {
+          data: {
+            success: false,
+            error: 'Tài khoản này không có quyền truy cập trang quản trị'
+          }
+        };
+      }
+      
+      // Nếu là admin, lưu token vào adminToken
+      if (response.data.token) {
+        localStorage.setItem('adminToken', response.data.token);
+      }
+    }
+    
+    return response;
+  } catch (error) {
+    console.error('Admin login error:', error);
+    throw error;
+  }
+};
+
+// Lấy thông tin admin hiện tại
+export const getCurrentAdmin = async () => {
+  try {
+    // Sử dụng endpoint user profile thông thường
+    const response = await api.get('/auth/me', {
+      headers: {
+        Authorization: `Bearer ${getAdminToken()}`
+      }
+    });
+    
+    if (response.data && response.data.success) {
+      const userData = response.data.user;
+      
+      // Kiểm tra xem người dùng có phải là admin không
+      if (userData.role !== 'admin') {
+        return {
+          data: {
+            success: false,
+            error: 'Không có quyền truy cập'
+          }
+        };
+      }
+      
+      return {
+        data: {
+          success: true,
+          admin: userData
+        }
+      };
+    } else {
+      throw new Error('Failed to fetch admin data');
+    }
+  } catch (error) {
+    console.error("Error fetching current admin:", error);
+    throw error;
+  }
+};
+
+// Kiểm tra xem admin đã đăng nhập chưa
+export const isAdminAuthenticated = (): boolean => {
+  const token = getAdminToken();
+  if (!token) return false;
+  
+  try {
+    // Kiểm tra xem token có hết hạn chưa
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const expiry = payload.exp * 1000; // Chuyển đổi về milliseconds
+    
+    return Date.now() < expiry && payload.role === 'admin';
+  } catch (error) {
+    return false;
+  }
+};
+
+// Đăng xuất admin
+export const logoutAdmin = (): void => {
+  localStorage.removeItem('adminToken');
+};
+
+// Lấy token admin từ localStorage
+export const getAdminToken = (): string | null => {
+  return localStorage.getItem('adminToken');
+};
 
 // Đăng ký tài khoản mới
 export const register = async (userData: RegisterData) => {
