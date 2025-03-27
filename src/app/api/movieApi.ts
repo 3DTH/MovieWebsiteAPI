@@ -66,6 +66,12 @@ export interface MovieDetailResponse {
   data: Movie;
 }
 
+export interface UpdateMovieData {
+  title?: string;
+  overview?: string;
+  voteAverage?: number;
+}
+
 export interface TMDBMovie {
   id: number;
   title: string;
@@ -134,9 +140,36 @@ export const syncAllMovies = async () => {
   return api.post('/movies/sync-all');
 };
 
-// Xóa phim (chỉ cho admin)
-export const deleteMovie = async (id: string) => {
-  return api.delete(`/movies/${id}`);
+// Cập nhật thông tin phim (chỉ cho admin)
+export const updateMovie = async (id: string, data: Partial<Movie>) => {
+  return api.put<{
+    success: boolean;
+    data: Movie;
+  }>(`/movies/${id}`, data);
+};
+
+// Delete movie (admin only)
+export const deleteMovie = async (id: string | number) => {
+  return api.delete<{
+    success: boolean;
+    data: {};
+  }>(`/movies/${id}`);
+};
+
+// Upload phim lên Google Drive (admin)
+export const uploadMovieFile = async (id: string, formData: FormData) => {
+  return api.post<{
+    success: boolean;
+    data: {
+      message: string;
+      movieId: number;
+      embedUrl: string;
+    };
+  }>(`/movies/${id}/upload`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
 };
 
 

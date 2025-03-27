@@ -1,19 +1,23 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiEye } from 'react-icons/fi';
-import { getMovies } from '@/app/api/movieApi';
-import type { Movie } from '@/app/api/movieApi';
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiEye } from "react-icons/fi";
+import { getMovies, searchMovies, deleteMovie } from "@/app/api/movieApi";
+import type { Movie } from "@/app/api/movieApi";
 
 export default function AdminMoviesPage() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [filteredMovies, setFilteredMovies] = useState<Movie[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [movieToDelete, setMovieToDelete] = useState<Movie | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const moviesPerPage = 10;
 
   useEffect(() => {
@@ -23,37 +27,64 @@ export default function AdminMoviesPage() {
   const fetchMovies = async () => {
     setIsLoading(true);
     try {
-      const response = await getMovies(currentPage, moviesPerPage);
+      let response;
+      if (searchTerm) {
+        response = await searchMovies({
+          keyword: searchTerm,
+          page: currentPage,
+          limit: moviesPerPage,
+        });
+      } else {
+        response = await getMovies(currentPage, moviesPerPage);
+      }
+
       if (response.data.success) {
         setMovies(response.data.data);
         setFilteredMovies(response.data.data);
         setTotalPages(Math.ceil((response.data.total || 0) / moviesPerPage));
       }
     } catch (error) {
-      console.error('Error fetching movies:', error);
+      console.error("Error fetching movies:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (searchTerm) {
-      const filtered = movies.filter(movie => 
-        movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        movie.directors.some(director => director.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        movie.genres.some(genre => genre.name.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-      setFilteredMovies(filtered);
-    } else {
-      setFilteredMovies(movies);
+  // Thêm hàm xử lý xóa
+  const handleDelete = async (movie: Movie) => {
+    setMovieToDelete(movie);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!movieToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteMovie(movieToDelete._id);
+      await fetchMovies(); // Refresh danh sách
+      setIsDeleteModalOpen(false);
+    } catch (error) {
+      console.error("Error deleting movie:", error);
+    } finally {
+      setIsDeleting(false);
+      setMovieToDelete(null);
     }
-  }, [searchTerm, movies]);
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchMovies();
+    }, 500); // Delay 500ms after typing
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm, currentPage]);
 
   return (
     <div className="p-6 space-y-6 bg-white">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-        <motion.h1 
+        <motion.h1
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-2xl font-bold text-gray-800"
@@ -75,7 +106,7 @@ export default function AdminMoviesPage() {
       </div>
 
       {/* Search */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -91,14 +122,17 @@ export default function AdminMoviesPage() {
               placeholder="Search movies..."
               className="pl-10 pr-4 py-2 w-full border rounded-lg bg-white text-gray-800 border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1); // Reset to first page when searching
+              }}
             />
           </div>
         </div>
       </motion.div>
 
       {/* Movies Table */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
@@ -138,20 +172,31 @@ export default function AdminMoviesPage() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredMovies.map((movie) => (
-                    <tr key={movie._id} className="hover:bg-gray-50 transition-colors">
+                    <tr
+                      key={movie._id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="h-10 w-10 flex-shrink-0">
-                            <img 
-                              className="h-10 w-10 rounded object-cover" 
-                              src={movie.posterPath ? `https://image.tmdb.org/t/p/w92${movie.posterPath}` : '/images/movie-placeholder.jpg'} 
-                              alt={movie.title} 
+                            <img
+                              className="h-10 w-10 rounded object-cover"
+                              src={
+                                movie.posterPath
+                                  ? `https://image.tmdb.org/t/p/w92${movie.posterPath}`
+                                  : "/images/movie-placeholder.jpg"
+                              }
+                              alt={movie.title}
                             />
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{movie.title}</div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {movie.title}
+                            </div>
                             <div className="text-sm text-gray-500">
-                              {movie.directors.length > 0 ? movie.directors[0].name : 'Unknown director'}
+                              {movie.directors.length > 0
+                                ? movie.directors[0].name
+                                : "Unknown director"}
                             </div>
                           </div>
                         </div>
@@ -164,8 +209,8 @@ export default function AdminMoviesPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-wrap gap-1">
                           {movie.genres.slice(0, 3).map((genre) => (
-                            <span 
-                              key={genre.id} 
+                            <span
+                              key={genre.id}
                               className="px-2 py-1 text-xs rounded-full bg-gray-700 text-gray-300"
                             >
                               {genre.name}
@@ -175,29 +220,70 @@ export default function AdminMoviesPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <span className="text-sm text-yellow-500 mr-1">★</span>
-                          <span className="text-sm text-gray-300">{movie.voteAverage.toFixed(1)}</span>
+                          <span className="text-sm text-yellow-500 mr-1">
+                            ★
+                          </span>
+                          <span className="text-sm text-gray-300">
+                            {movie.voteAverage.toFixed(1)}
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end space-x-3">
-                          <Link href={`/movies/${movie.tmdbId}`} target="_blank">
-                            <button className="text-blue-400 hover:text-blue-300 transition-colors">
+                          <Link
+                            href={`/movies/${movie.tmdbId}`}
+                            target="_blank"
+                          >
+                            <button className="text-blue-400 hover:text-blue-300 transition-colors cursor-pointer">
                               <FiEye className="w-5 h-5" />
                             </button>
                           </Link>
                           <Link href={`/admin/movies/edit/${movie._id}`}>
-                            <button className="text-green-400 hover:text-green-300 transition-colors">
+                            <button className="text-green-400 hover:text-green-300 transition-colors cursor-pointer">
                               <FiEdit2 className="w-5 h-5" />
                             </button>
                           </Link>
-                          <button 
-                            className="text-red-400 hover:text-red-300 transition-colors"
+                          <button
+                            onClick={() => handleDelete(movie)}
+                            className="text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+                            disabled={isDeleting}
                           >
                             <FiTrash2 className="w-5 h-5" />
                           </button>
                         </div>
                       </td>
+
+                      {/* Thêm Modal xác nhận xóa */}
+                      {isDeleteModalOpen && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">
+                              Xác nhận xóa phim
+                            </h3>
+                            <p className="text-sm text-gray-500 mb-4">
+                              Bạn có chắc chắn muốn xóa phim "
+                              {movieToDelete?.title}"? Hành động này không thể
+                              hoàn tác.
+                            </p>
+                            <div className="flex justify-end space-x-3">
+                              <button
+                                onClick={() => setIsDeleteModalOpen(false)}
+                                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                                disabled={isDeleting}
+                              >
+                                Hủy
+                              </button>
+                              <button
+                                onClick={confirmDelete}
+                                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+                                disabled={isDeleting}
+                              >
+                                {isDeleting ? "Đang xóa..." : "Xóa"}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -208,14 +294,18 @@ export default function AdminMoviesPage() {
             <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
               <div className="flex-1 flex justify-between sm:hidden">
                 <button
-                  onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
+                  onClick={() =>
+                    setCurrentPage((page) => Math.max(1, page - 1))
+                  }
                   disabled={currentPage === 1}
                   className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
                 >
                   Previous
                 </button>
                 <button
-                  onClick={() => setCurrentPage(page => Math.min(totalPages, page + 1))}
+                  onClick={() =>
+                    setCurrentPage((page) => Math.min(totalPages, page + 1))
+                  }
                   disabled={currentPage === totalPages}
                   className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
                 >
@@ -225,12 +315,16 @@ export default function AdminMoviesPage() {
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm text-gray-700">
-                    Showing page <span className="font-medium">{currentPage}</span> of{' '}
+                    Showing page{" "}
+                    <span className="font-medium">{currentPage}</span> of{" "}
                     <span className="font-medium">{totalPages}</span>
                   </p>
                 </div>
                 <div>
-                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  <nav
+                    className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                    aria-label="Pagination"
+                  >
                     <button
                       onClick={() => setCurrentPage(1)}
                       disabled={currentPage === 1}
@@ -240,20 +334,22 @@ export default function AdminMoviesPage() {
                       ««
                     </button>
                     <button
-                      onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
+                      onClick={() =>
+                        setCurrentPage((page) => Math.max(1, page - 1))
+                      }
                       disabled={currentPage === 1}
                       className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
                     >
-                      <span className="sr-only">Previous</span>
-                      «
+                      <span className="sr-only">Previous</span>«
                     </button>
                     <button
-                      onClick={() => setCurrentPage(page => Math.min(totalPages, page + 1))}
+                      onClick={() =>
+                        setCurrentPage((page) => Math.min(totalPages, page + 1))
+                      }
                       disabled={currentPage === totalPages}
                       className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
                     >
-                      <span className="sr-only">Next</span>
-                      »
+                      <span className="sr-only">Next</span>»
                     </button>
                     <button
                       onClick={() => setCurrentPage(totalPages)}
