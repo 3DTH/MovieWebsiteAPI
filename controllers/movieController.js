@@ -198,7 +198,13 @@ exports.getMovieDetails = async (req, res, next) => {
     const { id } = req.params;
     console.log("Đang tìm phim với ID:", id);
 
-    const movie = await Movie.findOne({ tmdbId: id })
+    // Check if id is MongoDB ObjectId
+    const isMongoId = /^[0-9a-fA-F]{24}$/.test(id);
+    
+    // Find movie by either MongoDB _id or tmdbId
+    const movie = await Movie.findOne(
+      isMongoId ? { _id: id } : { tmdbId: id }
+    )
       .populate("cast.actor", "name profilePath")
       .populate("directors", "name profilePath");
 
@@ -271,13 +277,61 @@ exports.searchMovies = async (req, res, next) => {
   }
 };
 
+// API cập nhật thông tin phim
+exports.updateMovie = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { title, overview, voteAverage } = req.body;
+
+    // Check if id is MongoDB ObjectId
+    const isMongoId = /^[0-9a-fA-F]{24}$/.test(id);
+    
+    // Find movie by either MongoDB _id or tmdbId
+    const movie = await Movie.findOne(
+      isMongoId ? { _id: id } : { tmdbId: id }
+    );
+
+    if (!movie) {
+      return next(new ErrorResponse("Không tìm thấy phim", 404));
+    }
+
+    // Update movie
+    const updatedMovie = await Movie.findOneAndUpdate(
+      isMongoId ? { _id: id } : { tmdbId: id },
+      {
+        $set: {
+          title: title || movie.title,
+          overview: overview || movie.overview,
+          voteAverage: voteAverage || movie.voteAverage,
+          lastUpdated: new Date(),
+        },
+      },
+      { new: true }
+    ).populate("cast.actor", "name profilePath")
+     .populate("directors", "name profilePath");
+
+    res.json({
+      success: true,
+      data: updatedMovie,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Xóa phim
 exports.deleteMovie = async (req, res, next) => {
   try {
     const { id } = req.params;
+    
+    // Check if id is MongoDB ObjectId
+    const isMongoId = /^[0-9a-fA-F]{24}$/.test(id);
+    
+    // Tìm phim bằng _id hoặc tmdbId
+    const movie = await Movie.findOne(
+      isMongoId ? { _id: id } : { tmdbId: id }
+    );
 
-    // Tìm phim bằng tmdbId
-    const movie = await Movie.findOne({ tmdbId: id });
     if (!movie) {
       return next(new ErrorResponse("Không tìm thấy phim", 404));
     }
@@ -296,6 +350,15 @@ exports.deleteMovie = async (req, res, next) => {
       { "movies.movie": movie._id },
       { $pull: { movies: { movie: movie._id } } }
     );
+
+    // Xóa file trên Google Drive nếu có
+    if (movie.googleDrive?.fileId) {
+      try {
+        await googleDriveService.deleteFile(movie.googleDrive.fileId);
+      } catch (error) {
+        console.error('Lỗi khi xóa file từ Google Drive:', error);
+      }
+    }
 
     // Xóa phim
     await Movie.deleteOne({ _id: movie._id });

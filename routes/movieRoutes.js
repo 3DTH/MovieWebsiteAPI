@@ -6,6 +6,7 @@ const {
     getMovies,
     getMovieDetails,
     searchMovies,
+    updateMovie,
     deleteMovie,
     syncNowPlayingMovies,
     syncAllMovies,
@@ -27,6 +28,7 @@ router.use(protect);
 router.post('/sync-popular', authorize('admin'), syncPopularMovies);
 router.post('/sync-now-playing', authorize('admin'), syncNowPlayingMovies);
 router.post('/sync-all', authorize('admin'), syncAllMovies);
+router.put('/:id', protect, authorize('admin'), updateMovie);
 router.delete('/:id', authorize('admin'), deleteMovie);
 router.post('/:id/upload', authorize('admin'), uploadMovieFile);
 
