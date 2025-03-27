@@ -126,18 +126,33 @@ export const searchMovies = async (params: {
 };
 
 // Đồng bộ phim phổ biến từ TMDB (chỉ cho admin)
-export const syncPopularMovies = async () => {
-  return api.post('/movies/sync-popular');
+export const syncPopularMovies = async (page = 1, totalPages = 1) => {
+  return api.post('/movies/sync-popular', {}, {
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+    },
+    params: { page, totalPages }
+  });
 };
 
 // Đồng bộ phim đang chiếu từ TMDB (chỉ cho admin)
-export const syncNowPlayingMovies = async () => {
-  return api.post('/movies/sync-now-playing');
+export const syncNowPlayingMovies = async (page = 1, totalPages = 1) => {
+  return api.post('/movies/sync-now-playing', {}, {
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+    },
+    params: { page, totalPages }
+  });
 };
 
 // Đồng bộ tất cả phim từ TMDB (chỉ cho admin)
-export const syncAllMovies = async () => {
-  return api.post('/movies/sync-all');
+export const syncAllMovies = async (page = 1, totalPages = 1) => {
+  return api.post('/movies/sync-all', {}, {
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+    },
+    params: { page, totalPages }
+  });
 };
 
 // Cập nhật thông tin phim (chỉ cho admin)

@@ -3,8 +3,22 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiEye } from "react-icons/fi";
-import { getMovies, searchMovies, deleteMovie } from "@/app/api/movieApi";
+import {
+  FiPlus,
+  FiSearch,
+  FiEdit2,
+  FiTrash2,
+  FiEye,
+  FiRefreshCw,
+} from "react-icons/fi";
+import {
+  getMovies,
+  searchMovies,
+  deleteMovie,
+  syncAllMovies,
+  syncNowPlayingMovies,
+  syncPopularMovies,
+} from "@/app/api/movieApi";
 import type { Movie } from "@/app/api/movieApi";
 
 export default function AdminMoviesPage() {
@@ -17,7 +31,9 @@ export default function AdminMoviesPage() {
   const [movieToDelete, setMovieToDelete] = useState<Movie | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState("");
+  const [totalMovies, setTotalMovies] = useState(0);
   const moviesPerPage = 10;
 
   useEffect(() => {
@@ -42,6 +58,7 @@ export default function AdminMoviesPage() {
         setMovies(response.data.data);
         setFilteredMovies(response.data.data);
         setTotalPages(Math.ceil((response.data.total || 0) / moviesPerPage));
+        setTotalMovies(response.data.total || 0); // Add this line
       }
     } catch (error) {
       console.error("Error fetching movies:", error);
@@ -72,6 +89,25 @@ export default function AdminMoviesPage() {
     }
   };
 
+  const handleSync = async (syncFunction: Function, type: string) => {
+    if (isSyncing) return;
+
+    setIsSyncing(true);
+    setSyncMessage(`Đang đồng bộ ${type}...`);
+
+    try {
+      await syncFunction(1, 3); // Sync first 3 pages
+      await fetchMovies(); // Refresh the movie list
+      setSyncMessage(`Đồng bộ ${type} thành công!`);
+    } catch (error) {
+      console.error(`Error syncing ${type}:`, error);
+      setSyncMessage(`Lỗi khi đồng bộ ${type}`);
+    } finally {
+      setTimeout(() => setSyncMessage(""), 3000); // Clear message after 3s
+      setIsSyncing(false);
+    }
+  };
+
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       fetchMovies();
@@ -95,11 +131,45 @@ export default function AdminMoviesPage() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
+          className="flex flex-wrap gap-2 items-center"
         >
+          {syncMessage && (
+            <span className="text-sm text-gray-600">{syncMessage}</span>
+          )}
+          <button
+            onClick={() => handleSync(syncPopularMovies, "phim phổ biến")}
+            disabled={isSyncing}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center hover:bg-blue-700 transition-colors disabled:opacity-50"
+          >
+            <FiRefreshCw
+              className={`mr-2 ${isSyncing ? "animate-spin" : ""}`}
+            />
+            Đồng bộ Phim Phổ Biến
+          </button>
+          <button
+            onClick={() => handleSync(syncNowPlayingMovies, "phim đang chiếu")}
+            disabled={isSyncing}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg flex items-center hover:bg-green-700 transition-colors disabled:opacity-50"
+          >
+            <FiRefreshCw
+              className={`mr-2 ${isSyncing ? "animate-spin" : ""}`}
+            />
+            Đồng bộ Phim Đang Chiếu
+          </button>
+          <button
+            onClick={() => handleSync(syncAllMovies, "tất cả phim")}
+            disabled={isSyncing}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg flex items-center hover:bg-purple-700 transition-colors disabled:opacity-50"
+          >
+            <FiRefreshCw
+              className={`mr-2 ${isSyncing ? "animate-spin" : ""}`}
+            />
+            Đồng bộ Tất cả Phim
+          </button>
           <Link href="/admin/movies/add">
-            <button className="mt-4 md:mt-0 px-4 py-2 bg-red-600 text-white rounded-lg flex items-center hover:bg-red-700 transition-colors">
+            <button className="px-4 py-2 bg-red-600 text-white rounded-lg flex items-center hover:bg-red-700 transition-colors">
               <FiPlus className="mr-2" />
-              Add New Movie
+              Thêm mới phim
             </button>
           </Link>
         </motion.div>
@@ -317,7 +387,8 @@ export default function AdminMoviesPage() {
                   <p className="text-sm text-gray-700">
                     Showing page{" "}
                     <span className="font-medium">{currentPage}</span> of{" "}
-                    <span className="font-medium">{totalPages}</span>
+                    <span className="font-medium">{totalPages}</span> • Total
+                    movies: <span className="font-medium">{totalMovies}</span>
                   </p>
                 </div>
                 <div>
