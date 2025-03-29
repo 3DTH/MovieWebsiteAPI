@@ -187,13 +187,7 @@ export const uploadMovieFile = async (id: string, formData: FormData) => {
   });
 };
 
-
-// // Lấy bình luận của phim
-// export const getMovieComments = async (movieId: string, page = 1, limit = 10) => {
-//   return api.get(`/movies/${movieId}/comments?page=${page}&limit=${limit}`);
-// };
-
-// // Thêm bình luận vào phim
-// export const addMovieComment = async (movieId: string, content: string) => {
-//   return api.post(`/movies/${movieId}/comments`, { content });
-// };
+// Lấy danh sách phim liên quan
+export const getSimilarMovies = async (movieId: string, limit = 4) => {
+  return api.get<MovieResponse>(`/movies/${movieId}/similar?limit=${limit}`);
+};

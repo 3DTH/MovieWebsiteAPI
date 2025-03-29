@@ -13,8 +13,10 @@
     "framer-motion": "^12.4.7",
     "install": "^0.13.0",
     "next": "15.2.0",
+    "next-auth": "^4.24.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
     "react-player": "^2.16.0"
   },
