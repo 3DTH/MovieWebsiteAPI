@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { 
   FiHome, FiFilm, FiUsers, FiSettings, 
@@ -17,11 +17,12 @@ interface AdminSidebarProps {
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, toggleSidebar }) => {
   const pathname = usePathname();
+  const router = useRouter(); 
   const { admin, logout } = useAdminAuth();
-
+  
   const handleLogout = async () => {
     await logout();
-    // Redirect will be handled by the AdminAuthContext
+    router.push('/admin/login');
   };
 
   const menuItems = [

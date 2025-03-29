@@ -1,11 +1,16 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { getMovieDetails, updateMovie, uploadMovieFile, deleteMovie } from '@/app/api/movieApi';
-import type { Movie } from '@/app/api/movieApi';
-import { FiTrash2, FiEdit2, FiUpload } from 'react-icons/fi';
-import Image from 'next/image';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  getMovieDetails,
+  updateMovie,
+  uploadMovieFile,
+  deleteMovie,
+} from "@/app/api/movieApi";
+import type { Movie } from "@/app/api/movieApi";
+import { FiTrash2, FiEdit2, FiUpload } from "react-icons/fi";
+import Image from "next/image";
 
 export default function EditMoviePage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -14,8 +19,8 @@ export default function EditMoviePage({ params }: { params: { id: string } }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
-    title: '',
-    overview: '',
+    title: "",
+    overview: "",
     voteAverage: 0,
   });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -37,17 +42,19 @@ export default function EditMoviePage({ params }: { params: { id: string } }) {
         });
       }
     } catch (error) {
-      console.error('Error fetching movie details:', error);
+      console.error("Error fetching movie details:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: name === 'voteAverage' ? parseFloat(value) : value
+      [name]: name === "voteAverage" ? parseFloat(value) : value,
     }));
   };
 
@@ -59,23 +66,31 @@ export default function EditMoviePage({ params }: { params: { id: string } }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check for admin token
+    const adminToken = localStorage.getItem("adminToken");
+    if (!adminToken) {
+      alert("Bạn cần đăng nhập với quyền admin");
+      router.push("/admin/login");
+      return;
+    }
+
     setIsSubmitting(true);
-  
     try {
-      console.log('Updating movie with data:', formData);
+      console.log("Updating movie with data:", formData);
       await updateMovie(params.id, formData);
-  
+
       if (selectedFile) {
         const uploadFormData = new FormData();
-        uploadFormData.append('movieFile', selectedFile);
-        console.log('Uploading file:', selectedFile.name);
+        uploadFormData.append("movieFile", selectedFile);
         const uploadResponse = await uploadMovieFile(params.id, uploadFormData);
-        console.log('Upload response:', uploadResponse.data);
+        console.log("Upload response:", uploadResponse.data);
       }
-  
-      router.push('/admin/movies');
+
+      router.push("/admin/movies");
     } catch (error) {
-      console.error('Error in handleSubmit:', error);
+      console.error("Error in handleSubmit:", error);
+      alert("Có lỗi xảy ra khi cập nhật phim");
     } finally {
       setIsSubmitting(false);
     }
@@ -83,13 +98,22 @@ export default function EditMoviePage({ params }: { params: { id: string } }) {
 
   const handleDelete = async () => {
     if (!movie) return;
-    
+
+    // Check for admin token
+    const adminToken = localStorage.getItem("adminToken");
+    if (!adminToken) {
+      alert("Bạn cần đăng nhập với quyền admin");
+      router.push("/admin/login");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await deleteMovie(params.id);
-      router.push('/admin/movies');
+      router.push("/admin/movies");
     } catch (error) {
-      console.error('Error deleting movie:', error);
+      console.error("Error deleting movie:", error);
+      alert("Có lỗi xảy ra khi xóa phim");  // Add error message
     } finally {
       setIsSubmitting(false);
     }
@@ -130,17 +154,31 @@ export default function EditMoviePage({ params }: { params: { id: string } }) {
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-semibold text-gray-700 mb-2">Movie Info</h3>
             <div className="space-y-2 text-sm">
-              <p><span className="text-gray-500">TMDB ID:</span> {movie.tmdbId}</p>
-              <p><span className="text-gray-500">Original Title:</span> {movie.originalTitle}</p>
-              <p><span className="text-gray-500">Release Date:</span> {new Date(movie.releaseDate).toLocaleDateString()}</p>
-              <p><span className="text-gray-500">Current Rating:</span> {movie.voteAverage} ({movie.voteCount} votes)</p>
+              <p>
+                <span className="text-gray-500">TMDB ID:</span> {movie.tmdbId}
+              </p>
+              <p>
+                <span className="text-gray-500">Original Title:</span>{" "}
+                {movie.originalTitle}
+              </p>
+              <p>
+                <span className="text-gray-500">Release Date:</span>{" "}
+                {new Date(movie.releaseDate).toLocaleDateString()}
+              </p>
+              <p>
+                <span className="text-gray-500">Current Rating:</span>{" "}
+                {movie.voteAverage} ({movie.voteCount} votes)
+              </p>
             </div>
           </div>
         </div>
 
         {/* Edit Form Column */}
         <div className="md:col-span-2">
-          <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6 bg-white p-6 rounded-lg shadow-sm"
+          >
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <FiEdit2 className="inline mr-2" />
@@ -213,7 +251,7 @@ export default function EditMoviePage({ params }: { params: { id: string } }) {
             <div className="flex justify-end space-x-4 pt-6">
               <button
                 type="button"
-                onClick={() => router.push('/admin/movies')}
+                onClick={() => router.push("/admin/movies")}
                 className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
               >
                 Cancel
@@ -223,7 +261,7 @@ export default function EditMoviePage({ params }: { params: { id: string } }) {
                 disabled={isSubmitting}
                 className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
               >
-                {isSubmitting ? 'Saving...' : 'Save Changes'}
+                {isSubmitting ? "Saving..." : "Save Changes"}
               </button>
             </div>
           </form>
@@ -236,7 +274,8 @@ export default function EditMoviePage({ params }: { params: { id: string } }) {
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-xl font-bold mb-4">Delete Movie</h3>
             <p className="mb-6">
-              Are you sure you want to delete "{movie.title}"? This action cannot be undone.
+              Are you sure you want to delete "{movie.title}"? This action
+              cannot be undone.
             </p>
             <div className="flex justify-end space-x-4">
               <button
@@ -250,7 +289,7 @@ export default function EditMoviePage({ params }: { params: { id: string } }) {
                 disabled={isSubmitting}
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
               >
-                {isSubmitting ? 'Deleting...' : 'Delete'}
+                {isSubmitting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

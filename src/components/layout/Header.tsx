@@ -5,18 +5,17 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiSearch, FiMenu, FiX, FiBell, FiLogIn, FiLogOut, FiUser } from 'react-icons/fi';
+import { FiMenu, FiX, FiBell, FiLogIn, FiLogOut, FiUser } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, logout, user } = useAuth();
-
+  
   // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
@@ -30,16 +29,6 @@ const Header: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Handle search submission
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
-      setIsSearchOpen(false);
-      setSearchQuery('');
-    }
-  };
 
   // Xử lý đăng xuất
   const handleLogout = async () => {
@@ -98,16 +87,6 @@ const Header: React.FC = () => {
 
           {/* Desktop Right Section */}
           <div className="hidden md:flex items-center space-x-6">
-            {/* Search Button */}
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="text-gray-200 hover:text-red-500 transition-colors"
-              aria-label="Search"
-            >
-              <FiSearch className="h-5 w-5" />
-            </motion.button>
 
             {isAuthenticated ? (
               <>
@@ -196,38 +175,6 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Search Overlay */}
-      <AnimatePresence>
-        {isSearchOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-            className="absolute top-16 md:top-20 left-0 right-0 bg-black/90 backdrop-blur-md p-4 shadow-lg"
-          >
-            <form onSubmit={handleSearch} className="max-w-3xl mx-auto relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Tìm kiếm phim, diễn viên..."
-                className="w-full bg-gray-800/50 border border-gray-700 rounded-full py-2 pl-10 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                autoFocus
-              />
-              <FiSearch className="absolute left-3 top-3 text-gray-400" />
-              <button
-                type="button"
-                onClick={() => setIsSearchOpen(false)}
-                className="absolute right-3 top-3 text-gray-400 hover:text-white"
-              >
-                <FiX />
-              </button>
-            </form>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Mobile Menu */}
       <AnimatePresence>
         {isMenuOpen && (
@@ -253,17 +200,7 @@ const Header: React.FC = () => {
               ))}
               
               <div className="pt-4 border-t border-gray-700">
-                <button
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    setIsSearchOpen(true);
-                  }}
-                  className="flex items-center py-2 text-base font-medium text-gray-200 hover:text-red-500"
-                >
-                  <FiSearch className="mr-3 h-5 w-5" />
-                  Tìm kiếm
-                </button>
-                
+               
                 {isAuthenticated ? (
                   <>
                     {/* Hiển thị khi đã đăng nhập */}

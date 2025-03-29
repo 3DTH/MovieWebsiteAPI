@@ -160,7 +160,11 @@ export const updateMovie = async (id: string, data: Partial<Movie>) => {
   return api.put<{
     success: boolean;
     data: Movie;
-  }>(`/movies/${id}`, data);
+  }>(`/movies/${id}`, data, {
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+    }
+  });
 };
 
 // Delete movie (admin only)
@@ -168,7 +172,11 @@ export const deleteMovie = async (id: string | number) => {
   return api.delete<{
     success: boolean;
     data: {};
-  }>(`/movies/${id}`);
+  }>(`/movies/${id}`, {
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+    }
+  });
 };
 
 // Upload phim lên Google Drive (admin)
