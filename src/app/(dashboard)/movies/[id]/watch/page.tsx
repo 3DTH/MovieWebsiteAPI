@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image"; // Add this import
 import { getMovieDetails, getMovies, Movie } from "@/app/api/movieApi";
 import { FiArrowLeft, FiMaximize, FiMinimize, FiClock, FiCalendar, FiStar, FiHeart } from "react-icons/fi";
 import Link from "next/link";
@@ -17,7 +18,8 @@ export default function WatchMovie() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
-  
+  const [similarMovies, setSimilarMovies] = useState<Movie[]>([]);
+
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -29,11 +31,24 @@ export default function WatchMovie() {
         const response = await getMovieDetails(movieId);
         
         if (response.data.success) {
-          setMovie(response.data.data);
+          const movieData = response.data.data;
+          setMovie(movieData);
           
           // Redirect if no embed URL
-          if (!response.data.data.googleDrive || !response.data.data.googleDrive.embedUrl) {
+          if (!movieData.googleDrive || !movieData.googleDrive.embedUrl) {
             router.push(`/movies/${movieId}`);
+            return;
+          }
+
+          // Fetch similar movies based on genres
+          const moviesResponse = await getMovies(1, 8); // Get 8 movies
+          if (moviesResponse.data.success) {
+            // Filter movies with similar genres and exclude current movie
+            const similar = moviesResponse.data.data
+              .filter(m => m._id !== movieId && 
+                m.genres.some(g => movieData.genres.some(mg => mg.id === g.id)))
+              .slice(0, 4); // Get only 4 movies
+            setSimilarMovies(similar);
           }
         } else {
           setError("Không thể tải thông tin phim");
@@ -141,7 +156,7 @@ export default function WatchMovie() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black">
       {/* Container chính */}
-      <div className="relative">
+      <div className="relative max-w-[80%] mx-auto">
         {/* Video Player Container */}
         <div 
           ref={playerContainerRef}
@@ -156,6 +171,8 @@ export default function WatchMovie() {
               className="w-full h-full"
               allowFullScreen
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              sandbox="allow-same-origin allow-scripts allow-forms allow-presentation"
+              referrerPolicy="no-referrer"
               frameBorder="0"
             ></iframe>
           </div>
@@ -406,21 +423,29 @@ export default function WatchMovie() {
                   Có thể bạn cũng thích
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {[1, 2, 3, 4].map((_, index) => (
-                    <div key={index} className="bg-gray-800/30 rounded-lg overflow-hidden group hover:bg-gray-800/50 transition-all duration-300">
+                  {similarMovies.map((movie) => (
+                    <Link 
+                      key={movie._id} 
+                      href={`/movies/${movie._id}`} 
+                      className="bg-gray-800/30 rounded-lg overflow-hidden group hover:bg-gray-800/50 transition-all duration-300"
+                    >
                       <div className="aspect-[2/3] relative">
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-3">
-                          <button className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-full text-sm transition-colors">
-                            Xem ngay
-                          </button>
-                        </div>
-                        <div className="absolute inset-0 bg-gray-800/50 animate-pulse"></div>
+                        <Image
+                          src={`https://image.tmdb.org/t/p/w500${movie.posterPath}`}
+                          alt={movie.title}
+                          fill
+                          className="object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
                       <div className="p-3">
-                        <div className="h-5 bg-gray-700/50 rounded w-3/4 mb-2"></div>
-                        <div className="h-4 bg-gray-700/50 rounded w-1/2"></div>
+                        <h4 className="text-white text-sm font-medium line-clamp-1">{movie.title}</h4>
+                        <div className="flex items-center mt-1 text-sm text-gray-400">
+                          <FiStar className="text-yellow-500 mr-1" />
+                          {movie.voteAverage.toFixed(1)}
+                        </div>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>
