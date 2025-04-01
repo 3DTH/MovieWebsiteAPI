@@ -34,6 +34,7 @@ export default function AdminMoviesPage() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState("");
   const [totalMovies, setTotalMovies] = useState(0);
+  const [syncProgress, setSyncProgress] = useState(0);
   const moviesPerPage = 10;
 
   useEffect(() => {
@@ -94,16 +95,26 @@ export default function AdminMoviesPage() {
 
     setIsSyncing(true);
     setSyncMessage(`Đang đồng bộ ${type}...`);
+    setSyncProgress(0);
 
     try {
-      await syncFunction(1, 3); // Sync first 3 pages
-      await fetchMovies(); // Refresh the movie list
+      // Sync 3 pages with progress tracking
+      for (let page = 1; page <= 3; page++) {
+        await syncFunction(page, 1);
+        setSyncProgress(Math.floor((page / 3) * 100));
+      }
+
+      await fetchMovies();
       setSyncMessage(`Đồng bộ ${type} thành công!`);
+      setSyncProgress(100);
     } catch (error) {
       console.error(`Error syncing ${type}:`, error);
       setSyncMessage(`Lỗi khi đồng bộ ${type}`);
     } finally {
-      setTimeout(() => setSyncMessage(""), 3000); // Clear message after 3s
+      setTimeout(() => {
+        setSyncMessage("");
+        setSyncProgress(0);
+      }, 3000);
       setIsSyncing(false);
     }
   };
@@ -133,13 +144,23 @@ export default function AdminMoviesPage() {
           transition={{ delay: 0.1 }}
           className="flex flex-wrap gap-2 items-center"
         >
-          {syncMessage && (
-            <span className="text-sm text-gray-600">{syncMessage}</span>
+          {(syncMessage || syncProgress > 0) && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">{syncMessage}</span>
+              {syncProgress > 0 && (
+                <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-green-500 transition-all duration-300"
+                    style={{ width: `${syncProgress}%` }}
+                  />
+                </div>
+              )}
+            </div>
           )}
           <button
             onClick={() => handleSync(syncPopularMovies, "phim phổ biến")}
             disabled={isSyncing}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center hover:bg-blue-700 transition-colors disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center hover:bg-blue-700 transition-colors disabled:opacity-50 cursor-pointer"
           >
             <FiRefreshCw
               className={`mr-2 ${isSyncing ? "animate-spin" : ""}`}
@@ -149,7 +170,7 @@ export default function AdminMoviesPage() {
           <button
             onClick={() => handleSync(syncNowPlayingMovies, "phim đang chiếu")}
             disabled={isSyncing}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg flex items-center hover:bg-green-700 transition-colors disabled:opacity-50"
+            className="px-4 py-2 bg-green-600 text-white rounded-lg flex items-center hover:bg-green-700 transition-colors disabled:opacity-50 cursor-pointer"
           >
             <FiRefreshCw
               className={`mr-2 ${isSyncing ? "animate-spin" : ""}`}
@@ -159,19 +180,13 @@ export default function AdminMoviesPage() {
           <button
             onClick={() => handleSync(syncAllMovies, "tất cả phim")}
             disabled={isSyncing}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg flex items-center hover:bg-purple-700 transition-colors disabled:opacity-50"
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg flex items-center hover:bg-purple-700 transition-colors disabled:opacity-50 cursor-pointer"
           >
             <FiRefreshCw
               className={`mr-2 ${isSyncing ? "animate-spin" : ""}`}
             />
             Đồng bộ Tất cả Phim
           </button>
-          <Link href="/admin/movies/add">
-            <button className="px-4 py-2 bg-red-600 text-white rounded-lg flex items-center hover:bg-red-700 transition-colors">
-              <FiPlus className="mr-2" />
-              Thêm mới phim
-            </button>
-          </Link>
         </motion.div>
       </div>
 

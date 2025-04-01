@@ -220,20 +220,20 @@ export default function Home() {
                   <div className="flex items-center space-x-4 mb-4">
                     <div className="flex items-center">
                       <FiStar className="text-yellow-500 mr-1" />
-                      <span>{movie.voteAverage.toFixed(1)}</span>
+                      <span className="text-white/60">{movie.voteAverage.toFixed(1)}</span>
                     </div>
-                    <span>•</span>
-                    <span>{new Intl.DateTimeFormat('vi-VN', {
+                    <span className="text-white/60">•</span>
+                    <span className="text-white/60">{new Intl.DateTimeFormat('vi-VN', {
                       day: 'numeric',
                       month: 'numeric', 
                       year: 'numeric'
                     }).format(new Date(movie.releaseDate))}</span>
-                    <span>•</span>
+                    <span className="text-white/60">•</span>
                     <div className="flex flex-wrap gap-2">
                       {movie.genres.map((genre) => (
                         <span
                           key={genre.id}
-                          className="text-sm px-2 py-1 bg-gray-800/60 rounded"
+                          className="text-sm px-2 py-1 bg-gray-800/40 rounded text-white/80"
                         >
                           {genre.name}
                         </span>
@@ -499,7 +499,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-8 md:p-12">
             <div className="max-w-3xl mx-auto text-center">
-              <h2 className="text-2xl md:text-3xl font-bold mb-4">
+              <h2 className="text-2xl md:text-3xl font-bold mb-4 text-gray-100">
                 Đăng ký nhận thông báo phim mới
               </h2>
               <p className="text-gray-300 mb-6">
@@ -532,7 +532,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold mb-4">
+              <h2 className="text-2xl md:text-3xl font-bold mb-4 text-gray-100">
                 Tải ứng dụng 3DFlix
               </h2>
               <p className="text-gray-300 mb-6">
