@@ -27,8 +27,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
+    "default-src 'self'; " +
     "frame-src 'self' https://drive.google.com; " +
-    "media-src 'self' https://drive.google.com"
+    "media-src 'self' https://drive.google.com; " +
+    "img-src 'self' https://image.tmdb.org data:; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+    "style-src 'self' 'unsafe-inline'; " +
+    "connect-src 'self' http://localhost:8080 https://api.themoviedb.org"
   );
   next();
 });
