@@ -15,13 +15,25 @@ interface AdminSidebarProps {
   toggleSidebar: () => void;
 }
 
+import { useRouter } from 'next/navigation';
+
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, toggleSidebar }) => {
   const pathname = usePathname();
+  const router = useRouter();
   const { admin, logout } = useAdminAuth();
 
   const handleLogout = async () => {
-    await logout();
-    // Redirect will be handled by the AdminAuthContext
+    try {
+      await logout();
+      // Clear any local storage data
+      localStorage.removeItem('adminToken');
+      
+      // Redirect to login page
+      router.push('/admin/login');
+    } catch (error) {
+      console.error('Lỗi khi đăng xuất:', error);
+      // You might want to show an error notification here
+    }
   };
 
   const menuItems = [
@@ -96,16 +108,16 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, toggleSidebar }) =>
         </ul>
       </nav>
 
-      {/* Logout Button */}
+      {/* Logout Button - Updated with loading state and better styling */}
       <div className="absolute bottom-0 w-full p-4 border-t border-gray-800">
         <button
           onClick={handleLogout}
-          className={`flex items-center w-full px-4 py-3 rounded-md text-gray-400 hover:bg-gray-800 hover:text-white transition-colors ${
+          className={`flex items-center w-full px-4 py-3 rounded-md text-gray-400 hover:bg-red-600/10 hover:text-red-500 transition-colors ${
             isOpen ? '' : 'justify-center'
           }`}
         >
-          <FiLogOut />
-          {isOpen && <span className="ml-3">Logout</span>}
+          <FiLogOut className="text-xl" />
+          {isOpen && <span className="ml-3">Đăng xuất</span>}
         </button>
       </div>
     </div>
