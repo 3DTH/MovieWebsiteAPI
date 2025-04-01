@@ -23,7 +23,24 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS Middleware
+// Thêm CSP headers
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "frame-src 'self' https://drive.google.com; " +
+    "media-src 'self' https://drive.google.com"
+  );
+  next();
+});
+
+// Thêm các security headers khác
+app.use((req, res, next) => {
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  next();
+});
+
+// CORS hiện tại
 app.use(cors({
   origin: process.env.FRONTEND_URL,
   credentials: true,
