@@ -11,7 +11,8 @@ const {
     syncNowPlayingMovies,
     syncAllMovies,
     getMovieEmbedUrl,
-    uploadMovieFile
+    uploadMovieFile,
+    getSimilarMovies
 } = require('../controllers/movieController');
 const commentRouter = require('./commentRoutes');
 
@@ -19,7 +20,11 @@ const commentRouter = require('./commentRoutes');
 router.get('/search', searchMovies);
 router.get('/', getMovies);
 router.get('/:id/video', getMovieEmbedUrl);
+router.get('/:id/similar', getSimilarMovies);
 router.get('/:id', getMovieDetails);
+
+// Re-route vào comment routes
+router.use('/:movieId/comments', commentRouter);
 
 // Protected routes (yêu cầu đăng nhập)
 router.use(protect);
@@ -31,9 +36,5 @@ router.post('/sync-all', authorize('admin'), syncAllMovies);
 router.put('/:id', protect, authorize('admin'), updateMovie);
 router.delete('/:id', authorize('admin'), deleteMovie);
 router.post('/:id/upload', authorize('admin'), uploadMovieFile);
-
-
-// Re-route vào comment routes
-router.use('/:movieId/comments', commentRouter);
 
 module.exports = router;

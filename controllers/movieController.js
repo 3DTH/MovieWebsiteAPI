@@ -613,3 +613,58 @@ exports.getMovieEmbedUrl = async (req, res, next) => {
     next(error);
   }
 };
+
+// API để lấy phim tương tự
+exports.getSimilarMovies = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const limit = parseInt(req.query.limit) || 4;
+
+    // Tìm phim gốc
+    const movie = await Movie.findById(id);
+    if (!movie) {
+      return next(new ErrorResponse("Không tìm thấy phim", 404));
+    }
+
+    // Lấy ID của các thể loại từ phim gốc
+    const genreIds = movie.genres.map(genre => genre.id);
+
+    // Tìm các phim có thể loại tương tự
+    const similarMovies = await Movie.aggregate([
+      {
+        $match: {
+          _id: { $ne: movie._id }, // Loại trừ phim hiện tại
+          'genres.id': { $in: genreIds } // Tìm phim có ít nhất 1 thể loại trùng khớp
+        }
+      },
+      {
+        $addFields: {
+          matchingGenres: {
+            $size: {
+              $setIntersection: [
+                '$genres.id',
+                genreIds
+              ]
+            }
+          }
+        }
+      },
+      {
+        $sort: {
+          matchingGenres: -1, // Sắp xếp theo số lượng thể loại trùng khớp
+          voteAverage: -1 // Sau đó sắp xếp theo điểm đánh giá
+        }
+      },
+      {
+        $limit: limit
+      }
+    ]);
+
+    res.json({
+      success: true,
+      data: similarMovies
+    });
+  } catch (error) {
+    next(error);
+  }
+};
