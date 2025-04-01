@@ -15,8 +15,6 @@ interface AdminSidebarProps {
   toggleSidebar: () => void;
 }
 
-import { useRouter } from 'next/navigation';
-
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, toggleSidebar }) => {
   const pathname = usePathname();
   const router = useRouter();

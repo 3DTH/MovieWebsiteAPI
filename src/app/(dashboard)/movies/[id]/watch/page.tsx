@@ -2,9 +2,17 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Image from "next/image"; // Add this import
-import { getMovieDetails, getMovies, Movie } from "@/app/api/movieApi";
-import { FiArrowLeft, FiMaximize, FiMinimize, FiClock, FiCalendar, FiStar, FiHeart } from "react-icons/fi";
+import { getMovieDetails, Movie, getSimilarMovies } from "@/app/api/movieApi";
+import CommentSection from "@/components/comments/CommentSection";
+import {
+  FiArrowLeft,
+  FiMaximize,
+  FiMinimize,
+  FiClock,
+  FiCalendar,
+  FiStar,
+  FiHeart,
+} from "react-icons/fi";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -21,8 +29,6 @@ export default function WatchMovie() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [similarMovies, setSimilarMovies] = useState<Movie[]>([]);
 
-  const [similarMovies, setSimilarMovies] = useState<Movie[]>([]);
-
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -34,24 +40,14 @@ export default function WatchMovie() {
         const response = await getMovieDetails(movieId);
 
         if (response.data.success) {
-          const movieData = response.data.data;
-          setMovie(movieData);
-          
-          // Redirect if no embed URL
-          if (!movieData.googleDrive || !movieData.googleDrive.embedUrl) {
-            router.push(`/movies/${movieId}`);
-            return;
-          }
+          setMovie(response.data.data);
 
-          // Fetch similar movies based on genres
-          const moviesResponse = await getMovies(1, 8); // Get 8 movies
-          if (moviesResponse.data.success) {
-            // Filter movies with similar genres and exclude current movie
-            const similar = moviesResponse.data.data
-              .filter(m => m._id !== movieId && 
-                m.genres.some(g => movieData.genres.some(mg => mg.id === g.id)))
-              .slice(0, 4); // Get only 4 movies
-            setSimilarMovies(similar);
+          // Redirect if no embed URL
+          if (
+            !response.data.data.googleDrive ||
+            !response.data.data.googleDrive.embedUrl
+          ) {
+            router.push(`/movies/${movieId}`);
           }
         } else {
           setError("Không thể tải thông tin phim");
@@ -191,8 +187,7 @@ export default function WatchMovie() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black">
-      {/* Container chính */}
-      <div className="relative max-w-[80%] mx-auto">
+      <div className="relative max-w-[80%] mx-auto pt-8">
         {/* Video Player Container */}
         <div
           ref={playerContainerRef}
@@ -499,9 +494,9 @@ export default function WatchMovie() {
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {similarMovies.map((movie) => (
-                    <Link 
-                      key={movie._id} 
-                      href={`/movies/${movie._id}`} 
+                    <Link
+                      key={movie._id}
+                      href={`/movies/${movie.tmdbId}/watch`}
                       className="bg-gray-800/30 rounded-lg overflow-hidden group hover:bg-gray-800/50 transition-all duration-300"
                     >
                       <div className="aspect-[2/3] relative">
@@ -511,16 +506,20 @@ export default function WatchMovie() {
                           fill
                           className="object-cover"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                      <div className="p-3">
-                        <h4 className="text-white text-sm font-medium line-clamp-1">{movie.title}</h4>
-                        <div className="flex items-center mt-1 text-sm text-gray-400">
-                          <FiStar className="text-yellow-500 mr-1" />
-                          {movie.voteAverage.toFixed(1)}
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-3">
+                          <button className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-full text-sm transition-colors">
+                            Xem ngay
+                          </button>
                         </div>
                       </div>
-                    </Link>
+                      <div className="p-3">
+                        <h4 className="text-white font-medium line-clamp-1">
+                          {movie.title}
+                        </h4>
+                        <p className="text-gray-400 text-sm mt-1">
+                          {new Date(movie.releaseDate).getFullYear()}
+                        </p>
+                      </div>
                     </Link>
                   ))}
                 </div>
