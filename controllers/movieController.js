@@ -668,3 +668,87 @@ exports.getSimilarMovies = async (req, res, next) => {
     next(error);
   }
 };
+
+// Lấy danh sách phim mới
+exports.getNewMovies = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const [movies, total] = await Promise.all([
+      Movie.find()
+        .sort({ releaseDate: -1 })
+        .skip(skip)
+        .limit(limit),
+      Movie.countDocuments(),
+    ]);
+
+    res.json({
+      success: true,
+      count: movies.length,
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      data: movies,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Lấy danh sách phim phổ biến
+exports.getPopularMovies = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const [movies, total] = await Promise.all([
+      Movie.find({ isPopular: true })
+        .sort({ popularity: -1 })
+        .skip(skip)
+        .limit(limit),
+      Movie.countDocuments({ isPopular: true }),
+    ]);
+
+    res.json({
+      success: true,
+      count: movies.length,
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      data: movies,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Lấy danh sách phim đánh giá cao
+exports.getTopRatedMovies = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const [movies, total] = await Promise.all([
+      Movie.find({ voteAverage: { $gte: 3.833 } })
+        .sort({ voteAverage: -1 })
+        .skip(skip)
+        .limit(limit),
+      Movie.countDocuments({ voteAverage: { $gte: 3.833 } }),
+    ]);
+
+    res.json({
+      success: true,
+      count: movies.length,
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      data: movies,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
