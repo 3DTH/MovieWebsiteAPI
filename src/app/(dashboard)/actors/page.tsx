@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FiSearch, FiFilter, FiStar, FiChevronDown, FiX, FiLoader } from 'react-icons/fi';
+import { FiSearch, FiFilter, FiStar, FiChevronDown, FiX, FiLoader, FiUsers, FiCalendar, FiRotateCcw, FiCheck } from 'react-icons/fi';
 import { searchActors, Actor } from '@/app/api/actorApi';
 
 // Filter options
@@ -194,85 +194,186 @@ export default function ActorsPage() {
         <AnimatePresence>
           {isFilterOpen && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="mb-8 bg-gray-800/70 backdrop-blur-sm rounded-xl p-6"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="mb-8 bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-gray-700/50"
             >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Sort By */}
-                <div>
-                  <h3 className="text-white font-medium mb-3">Sắp xếp theo</h3>
-                  <div className="space-y-2">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="space-y-4"
+                >
+                  <h3 className="text-white font-medium mb-4 flex items-center">
+                    <FiFilter className="mr-2 text-red-500" />
+                    Sắp xếp theo
+                  </h3>
+                  <div className="space-y-3">
                     {filters.sortBy.map((option) => (
-                      <label key={option} className="flex items-center cursor-pointer">
-                        <input
-                          type="radio"
-                          name="sortBy"
-                          checked={activeFilter.sortBy === option}
-                          onChange={() => setActiveFilter({...activeFilter, sortBy: option})}
-                          className="form-radio h-4 w-4 text-red-600 focus:ring-red-500 border-gray-600 bg-gray-700"
-                        />
-                        <span className="ml-2 text-gray-300">{option}</span>
-                      </label>
+                      <motion.label
+                        key={option}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="flex items-center cursor-pointer group"
+                      >
+                        <div className="relative">
+                          <input
+                            type="radio"
+                            name="sortBy"
+                            checked={activeFilter.sortBy === option}
+                            onChange={() => setActiveFilter({...activeFilter, sortBy: option})}
+                            className="opacity-0 absolute h-5 w-5"
+                          />
+                          <div className={`border-2 rounded-full h-5 w-5 flex items-center justify-center transition-colors ${
+                            activeFilter.sortBy === option 
+                              ? 'border-red-500 bg-red-500' 
+                              : 'border-gray-600 group-hover:border-red-400'
+                          }`}>
+                            {activeFilter.sortBy === option && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="h-2 w-2 bg-white rounded-full"
+                              />
+                            )}
+                          </div>
+                        </div>
+                        <span className="ml-3 text-gray-300 group-hover:text-white transition-colors">
+                          {option}
+                        </span>
+                      </motion.label>
                     ))}
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Gender */}
-                <div>
-                  <h3 className="text-white font-medium mb-3">Giới tính</h3>
-                  <div className="space-y-2">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="space-y-4"
+                >
+                  <h3 className="text-white font-medium mb-4 flex items-center">
+                    <FiUsers className="mr-2 text-red-500" />
+                    Giới tính
+                  </h3>
+                  <div className="space-y-3">
                     {filters.gender.map((option) => (
-                      <label key={option} className="flex items-center cursor-pointer">
-                        <input
-                          type="radio"
-                          name="gender"
-                          checked={activeFilter.gender === option}
-                          onChange={() => setActiveFilter({...activeFilter, gender: option})}
-                          className="form-radio h-4 w-4 text-red-600 focus:ring-red-500 border-gray-600 bg-gray-700"
-                        />
-                        <span className="ml-2 text-gray-300">{option}</span>
-                      </label>
+                      <motion.label
+                        key={option}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="flex items-center cursor-pointer group"
+                      >
+                        <div className="relative">
+                          <input
+                            type="radio"
+                            name="gender"
+                            checked={activeFilter.gender === option}
+                            onChange={() => setActiveFilter({...activeFilter, gender: option})}
+                            className="opacity-0 absolute h-5 w-5"
+                          />
+                          <div className={`border-2 rounded-full h-5 w-5 flex items-center justify-center transition-colors ${
+                            activeFilter.gender === option 
+                              ? 'border-red-500 bg-red-500' 
+                              : 'border-gray-600 group-hover:border-red-400'
+                          }`}>
+                            {activeFilter.gender === option && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="h-2 w-2 bg-white rounded-full"
+                              />
+                            )}
+                          </div>
+                        </div>
+                        <span className="ml-3 text-gray-300 group-hover:text-white transition-colors">
+                          {option}
+                        </span>
+                      </motion.label>
                     ))}
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Age Range */}
-                <div>
-                  <h3 className="text-white font-medium mb-3">Độ tuổi</h3>
-                  <div className="space-y-2">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="space-y-4"
+                >
+                  <h3 className="text-white font-medium mb-4 flex items-center">
+                    <FiCalendar className="mr-2 text-red-500" />
+                    Độ tuổi
+                  </h3>
+                  <div className="space-y-3">
                     {filters.ageRange.map((option) => (
-                      <label key={option} className="flex items-center cursor-pointer">
-                        <input
-                          type="radio"
-                          name="ageRange"
-                          checked={activeFilter.ageRange === option}
-                          onChange={() => setActiveFilter({...activeFilter, ageRange: option})}
-                          className="form-radio h-4 w-4 text-red-600 focus:ring-red-500 border-gray-600 bg-gray-700"
-                        />
-                        <span className="ml-2 text-gray-300">{option}</span>
-                      </label>
+                      <motion.label
+                        key={option}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="flex items-center cursor-pointer group"
+                      >
+                        <div className="relative">
+                          <input
+                            type="radio"
+                            name="ageRange"
+                            checked={activeFilter.ageRange === option}
+                            onChange={() => setActiveFilter({...activeFilter, ageRange: option})}
+                            className="opacity-0 absolute h-5 w-5"
+                          />
+                          <div className={`border-2 rounded-full h-5 w-5 flex items-center justify-center transition-colors ${
+                            activeFilter.ageRange === option 
+                              ? 'border-red-500 bg-red-500' 
+                              : 'border-gray-600 group-hover:border-red-400'
+                          }`}>
+                            {activeFilter.ageRange === option && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="h-2 w-2 bg-white rounded-full"
+                              />
+                            )}
+                          </div>
+                        </div>
+                        <span className="ml-3 text-gray-300 group-hover:text-white transition-colors">
+                          {option}
+                        </span>
+                      </motion.label>
                     ))}
                   </div>
-                </div>
+                </motion.div>
               </div>
 
-              <div className="flex justify-end mt-6 space-x-4">
-                <button
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="flex justify-end mt-8 space-x-4 border-t border-gray-700/50 pt-6"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={resetFilters}
-                  className="px-4 py-2 text-gray-300 hover:text-white"
+                  className="px-4 py-2 text-gray-300 hover:text-white flex items-center"
                 >
+                  <FiRotateCcw className="mr-2" />
                   Đặt lại
-                </button>
-                <button
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={applyFilters}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md"
+                  className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center shadow-lg shadow-red-600/20"
                 >
+                  <FiCheck className="mr-2" />
                   Áp dụng
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -573,4 +674,4 @@ export default function ActorsPage() {
       </div>
     </motion.div>
   );
-}
+};

@@ -15,7 +15,14 @@ import Filter from "@/components/ui/Filter";
 import MovieCard from "@/components/ui/MovieCard";
 import MovieListItem from "@/components/ui/MovieListItem";
 import MovieGridCard from "@/components/ui/MovieGridCard";
-import { getMovies, Movie, searchMovies } from "@/app/api/movieApi";
+import { 
+  getMovies, 
+  getNewMovies, 
+  searchMovies, 
+  getPopularMovies,
+  getTopRatedMovies,
+  Movie 
+} from "@/app/api/movieApi";
 
 // Sample data - replace with your actual API calls
 const genres = [
@@ -30,13 +37,13 @@ const genres = [
 ];
 
 const years = [
+  { id: "2025", name: "2025" },
+  { id: "2024", name: "2024" },
   { id: "2023", name: "2023" },
   { id: "2022", name: "2022" },
   { id: "2021", name: "2021" },
   { id: "2020", name: "2020" },
-  { id: "2019", name: "2019" },
-  { id: "2018", name: "2018" },
-  { id: "2010-2017", name: "2010-2017" },
+  { id: "2010-2020", name: "2010-2020" },
   { id: "2000-2009", name: "2000-2009" },
   { id: "before-2000", name: "Trước 2000" },
 ];
@@ -215,15 +222,38 @@ const MoviesPage = () => {
     return () => clearTimeout(timer);
   }, [activeFilters, movies]);
 
-  const fetchMovies = async () => {
+  const fetchMovies = async (isSearch = false) => {
     setIsLoading(true);
     try {
-      const response = await getMovies(currentPage, moviesPerPage);
+      let response;
+      if (isSearch && searchQuery.trim()) {
+        response = await searchMovies({
+          keyword: searchQuery,
+          genre: activeFilters.genres[0],
+          year: activeFilters.years[0],
+          rating: activeFilters.rating !== 'all' ? activeFilters.rating : undefined,
+          page: currentPage,
+          limit: moviesPerPage,
+        });
+      } else {
+        // Choose API based on active filter
+        switch (activeFilters.type) {
+          case 'popular':
+            response = await getPopularMovies(currentPage, moviesPerPage);
+            break;
+          case 'top-rated':
+            response = await getTopRatedMovies(currentPage, moviesPerPage);
+            break;
+          default:
+            // Default to new movies
+            response = await getNewMovies(currentPage, moviesPerPage);
+        }
+      }
+
       if (response.data.success) {
         setMovies(response.data.data);
-        setFilteredMovies(response.data.data);
         setTotalPages(response.data.totalPages || 1);
-        setTotalResults(response.data.total || response.data.data.length);
+        setTotalResults(response.data.total || 0);
       }
     } catch (error) {
       console.error("Error fetching movies:", error);

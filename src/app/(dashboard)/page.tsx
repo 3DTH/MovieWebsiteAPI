@@ -324,24 +324,60 @@ export default function Home() {
       </section>
 
       {/* Thể loại */}
-      <section className="py-12 bg-gradient-to-b from-black to-gray-900">
+      <section className="py-16 bg-gradient-to-b from-black via-gray-900 to-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl md:text-3xl font-bold mb-6 text-white">
+          <motion.h2 
+            initial={{ opacity: 0, y: -20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-3xl md:text-4xl font-bold mb-8 text-white text-center"
+          >
             Khám phá theo thể loại
-          </h2>
+          </motion.h2>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {uniqueGenres.map((genre) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+            {uniqueGenres.map((genre, index) => (
               <Link key={genre.id} href={`/genres/${genre.id}`}>
                 <motion.div
-                  whileHover={{ scale: 1.03 }}
-                  className="relative h-32 rounded-lg overflow-hidden"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+                  }}
+                  className="relative h-40 rounded-xl overflow-hidden group cursor-pointer"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-gray-800 to-gray-700" />
-                  <div className="absolute inset-0 flex items-center p-4">
-                    <h3 className="text-lg md:text-xl font-semibold text-red-400">
+                  <div className="absolute inset-0 bg-gradient-to-br from-red-600/80 to-gray-900/90 group-hover:from-red-500/90 group-hover:to-gray-800/95 transition-all duration-300" />
+                  
+                  {/* Genre Icon - You can add different icons for different genres */}
+                  <div className="absolute top-4 right-4 text-white/80 group-hover:text-white transition-colors duration-300">
+                    <motion.div
+                      whileHover={{ rotate: 360 }}
+                      transition={{ duration: 0.5 }}
+                      className="w-8 h-8"
+                    >
+                      {/* You can add genre-specific icons here */}
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                      </svg>
+                    </motion.div>
+                  </div>
+                  
+                  <div className="absolute inset-0 flex flex-col justify-end p-6">
+                    <motion.h3 
+                      whileHover={{ scale: 1.05 }}
+                      className="text-xl md:text-2xl font-bold text-white group-hover:text-red-400 transition-colors duration-300"
+                    >
                       {genre.name}
-                    </h3>
+                    </motion.h3>
+                    
+                    <motion.div
+                      initial={{ width: "0%" }}
+                      whileHover={{ width: "100%" }}
+                      transition={{ duration: 0.3 }}
+                      className="h-0.5 bg-red-500 mt-2"
+                    />
                   </div>
                 </motion.div>
               </Link>
