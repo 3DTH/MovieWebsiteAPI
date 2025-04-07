@@ -17,6 +17,9 @@ import {
 } from "react-icons/fi";
 import { getMovieDetails, Movie } from "@/app/api/movieApi";
 import CommentSection from "@/components/comments/CommentSection";
+import { useAuth } from "@/contexts/AuthContext";
+import { addToFavorites, removeFromFavorites, checkIsFavorite } from "@/app/api/favoriteApi";
+import { toast } from "react-hot-toast";
 
 // Format runtime to hours and minutes
 const formatRuntime = (minutes: number) => {
@@ -90,7 +93,9 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
 export default function MovieDetail() {
   const params = useParams();
   const movieId = params.id as string;
+  const { isAuthenticated } = useAuth();
 
+  const [isFavorite, setIsFavorite] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedVideo, setSelectedVideo] = useState<{
     key: string;
@@ -102,6 +107,44 @@ export default function MovieDetail() {
   const [error, setError] = useState<string | null>(null);
   const [similarMovies, setSimilarMovies] = useState<Movie[]>([]);
   const videosRef = React.useRef<HTMLDivElement>(null);
+
+  // Check if movie is in favorites
+  useEffect(() => {
+    const checkFavoriteStatus = async () => {
+      if (isAuthenticated && movieId) {
+        try {
+          const isFav = await checkIsFavorite(movieId);
+          setIsFavorite(isFav);
+        } catch (error) {
+          console.error("Error checking favorite status:", error);
+        }
+      }
+    };
+
+    checkFavoriteStatus();
+  }, [movieId, isAuthenticated]);
+
+  // Handle favorite toggle
+  const handleFavoriteClick = async () => {
+    if (!isAuthenticated) {
+      toast.error("Vui lòng đăng nhập để thêm phim vào danh sách yêu thích");
+      return;
+    }
+
+    try {
+      if (isFavorite) {
+        await removeFromFavorites(movieId);
+        toast.success("Đã xóa khỏi danh sách yêu thích");
+      } else {
+        await addToFavorites(movieId);
+        toast.success("Đã thêm vào danh sách yêu thích");
+      }
+      setIsFavorite(!isFavorite);
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast.error("Không thể cập nhật danh sách yêu thích");
+    }
+  };
 
   // Fetch movie data based on movieId
   useEffect(() => {
@@ -303,10 +346,17 @@ export default function MovieDetail() {
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      className="flex items-center justify-center w-10 h-10 bg-gray-800/80 hover:bg-gray-700/80 text-white rounded-full transition-colors"
-                      aria-label="Add to favorites"
+                      onClick={handleFavoriteClick}
+                      className={`flex items-center justify-center w-10 h-10 ${
+                        isFavorite 
+                          ? 'bg-red-600 hover:bg-red-700' 
+                          : 'bg-gray-800/80 hover:bg-gray-700/80'
+                      } text-white rounded-full transition-colors`}
+                      aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
                     >
-                      <FiHeart className="h-5 w-5" />
+                      <FiHeart 
+                        className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} 
+                      />
                     </motion.button>
                     <motion.button
                       whileHover={{ scale: 1.1 }}
