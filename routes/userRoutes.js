@@ -14,13 +14,8 @@ const { protect, authorize } = require('../middleware/auth');
 // Routes yêu cầu xác thực
 router.use(protect);
 
-// Route lấy danh sách avatar có sẵn
 router.get('/avatars', getAvatars);
-
-// Route cập nhật avatar
 router.put('/avatar', updateAvatar);
-
-// Route cập nhật username
 router.put('/username', updateUsername);
 
 // Routes chỉ dành cho admin

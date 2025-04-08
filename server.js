@@ -27,13 +27,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; " +
-    "frame-src 'self' https://drive.google.com; " +
-    "media-src 'self' https://drive.google.com; " +
-    "img-src 'self' https://image.tmdb.org data:; " +
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
-    "style-src 'self' 'unsafe-inline'; " +
-    "connect-src 'self' http://localhost:8080 https://api.themoviedb.org"
+    "default-src 'self'; " +  // Chỉ cho phép tài nguyên từ cùng nguồn gốc
+    "frame-src 'self' https://drive.google.com; " + // Cho phép nhúng iframe từ nguồn gốc và Google Drive
+    "media-src 'self' https://drive.google.com; " + // Cho phép phát media từ nguồn gốc và Google Drive
+    "img-src 'self' https://image.tmdb.org data:; " + // Cho phép hình ảnh từ nguồn gốc, TMDB và data URLs
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " + // Cho phép JavaScript từ nguồn gốc và inline scripts
+    "style-src 'self' 'unsafe-inline'; " + // Cho phép CSS từ nguồn gốc và inline styles
+    "connect-src 'self' http://localhost:8080 https://api.themoviedb.org" // Cho phép kết nối API đến các domain được chỉ định
   );
   next();
 });
