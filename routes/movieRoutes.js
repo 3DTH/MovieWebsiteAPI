@@ -12,13 +12,19 @@ const {
     syncAllMovies,
     getMovieEmbedUrl,
     uploadMovieFile,
-    getSimilarMovies
+    getSimilarMovies,
+    getNewMovies,
+    getPopularMovies,
+    getTopRatedMovies
 } = require('../controllers/movieController');
 const commentRouter = require('./commentRoutes');
 
 // Public routes
 router.get('/search', searchMovies);
 router.get('/', getMovies);
+router.get('/new', getNewMovies);
+router.get('/popular', getPopularMovies);
+router.get('/top-rated', getTopRatedMovies);
 router.get('/:id/video', getMovieEmbedUrl);
 router.get('/:id/similar', getSimilarMovies);
 router.get('/:id', getMovieDetails);
