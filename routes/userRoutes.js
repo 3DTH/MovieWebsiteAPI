@@ -3,6 +3,7 @@ const router = express.Router();
 const { 
     createUser, 
     getUsers, 
+    getUserById,
     updateUser, 
     deleteUser, 
     updateAvatar,
@@ -28,6 +29,7 @@ router.route('/')
 
 // Routes /api/users/:id
 router.route('/:id')
+    .get(getUserById)
     .put(updateUser)
     .delete(deleteUser);
 

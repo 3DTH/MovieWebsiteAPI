@@ -15,8 +15,7 @@ const {
     uploadMovieFile,
     getSimilarMovies,
     getNewMovies,
-    getPopularMovies,
-    getTopRatedMovies
+    getFilteredMovies
 } = require('../controllers/movieController');
 
 // Public routes

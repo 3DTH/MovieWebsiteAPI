@@ -28,6 +28,27 @@ exports.createUser = async (req, res, next) => {
     }
 };
 
+// Lấy userId
+exports.getUserById = async (req, res, next) => {
+    try {
+      const user = await User.findById(req.params.id).select('-password');
+  
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found'
+        });
+      }
+  
+      res.status(200).json({
+        success: true,
+        data: user
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
 // Lấy danh sách users (chỉ admin)
 exports.getUsers = async (req, res, next) => {
     try {
