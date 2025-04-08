@@ -49,13 +49,21 @@ export interface PaginatedResponse<T> {
 
 // Lấy thông tin user theo ID (chỉ admin)
 export const getUserById = async (userId: string): Promise<ApiResponse<User>> => {
-  const response = await api.get<ApiResponse<User>>(`/users/${userId}`);
+  const response = await api.get<ApiResponse<User>>(`/users/${userId}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+    }
+  });
   return response.data;
 };
 
 // Lấy danh sách users (chỉ admin)
 export const getUsers = async (page: number = 1, limit: number = 10): Promise<PaginatedResponse<User>> => {
-  const response = await api.get<PaginatedResponse<User>>(`/users?page=${page}&limit=${limit}`);
+  const response = await api.get<PaginatedResponse<User>>(`/users?page=${page}&limit=${limit}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+    }
+  });
   return response.data;
 };
 
@@ -66,7 +74,11 @@ export const createUser = async (userData: {
   password: string;
   role?: string;
 }): Promise<ApiResponse<User>> => {
-  const response = await api.post<ApiResponse<User>>('/users', userData);
+  const response = await api.post<ApiResponse<User>>('/users', userData, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+    }
+  });
   return response.data;
 };
 
@@ -80,13 +92,21 @@ export const updateUser = async (
     avatar?: string;
   }
 ): Promise<ApiResponse<User>> => {
-  const response = await api.put<ApiResponse<User>>(`/users/${userId}`, userData);
+  const response = await api.put<ApiResponse<User>>(`/users/${userId}`, userData, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+    }
+  });
   return response.data;
 };
 
 // Xóa user (chỉ admin)
 export const deleteUser = async (userId: string): Promise<ApiResponse<null>> => {
-  const response = await api.delete<ApiResponse<null>>(`/users/${userId}`);
+  const response = await api.delete<ApiResponse<null>>(`/users/${userId}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+    }
+  });
   return response.data;
 };
 

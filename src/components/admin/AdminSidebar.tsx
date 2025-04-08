@@ -35,15 +35,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, toggleSidebar }) =>
   };
 
   const menuItems = [
-    { name: 'Dashboard', icon: <FiHome />, path: '/admin/dashboard' },
-    { name: 'Movies', icon: <FiFilm />, path: '/admin/movies' },
-    // { name: 'TV Series', icon: <FiTv />, path: '/admin/series' },
-    // { name: 'Users', icon: <FiUsers />, path: '/admin/users' },
-    // { name: 'Actors', icon: <FiStar />, path: '/admin/actors' },
-    // { name: 'Categories', icon: <FiTag />, path: '/admin/categories' },
-    // { name: 'Comments', icon: <FiMessageSquare />, path: '/admin/comments' },
-    // { name: 'Analytics', icon: <FiBarChart2 />, path: '/admin/analytics' },
-    { name: 'Settings', icon: <FiSettings />, path: '/admin/settings' },
+    { name: 'Manage Users', icon: <FiUsers />, path: '/admin/manage-users' },
+    { name: 'Movies', icon: <FiFilm />, path: '/admin/movies' }
   ];
 
   const isActive = (path: string) => {

@@ -38,7 +38,7 @@ const AdminLoginForm = () => {
       if (response.data.success) {
         // Chuyển hướng đến trang quản trị
         setTimeout(() => {
-          router.push("/admin/dashboard");
+          router.push("/admin/manage-users");
         }, 1000);
       } else {
         setError(response.data.error || "Đăng nhập thất bại");

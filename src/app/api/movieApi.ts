@@ -141,6 +141,19 @@ export interface TMDBMovieResponse {
   data: TMDBMovie[];
 }
 
+export interface MovieFilterParams {
+  keyword?: string;
+  genres?: string | string[]; 
+  year?: string;
+  country?: string;
+  rating?: string;
+  type?: string;
+  version?: string;
+  sort?: string;
+  page: number;
+  limit: number;
+}
+
 // Lấy danh sách phim (từ database)
 export const getMovies = async (page = 1, limit = 10) => {
   return api.get<MovieResponse>(`/movies?page=${page}&limit=${limit}`);
@@ -271,21 +284,7 @@ export const getTopRatedMovies = async (page: number = 1, limit: number = 20) =>
   return api.get<MovieResponse>(`/movies/top-rated?page=${page}&limit=${limit}`);
 };
 
-// Add this interface for filter parameters
-export interface MovieFilterParams {
-  keyword?: string;
-  genres?: string | string[]; 
-  year?: string;
-  country?: string;
-  rating?: string;
-  type?: string;
-  version?: string;
-  sort?: string;
-  page: number;
-  limit: number;
-}
-
-// Add this function to handle filtered movies
+// Lọc phim
 export const getFilteredMovies = async (params: MovieFilterParams) => {
   // Convert params to URL search params
   const searchParams = new URLSearchParams();
