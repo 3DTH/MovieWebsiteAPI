@@ -31,21 +31,41 @@ export interface SingleCommentResponse {
 export const getMovieComments = async (movieId: string) => {
   return api.get<CommentResponse>(`/movies/${movieId}/comments`);
 };
+
 // Thêm bình luận mới
 export const addComment = async (movieId: string, content: string) => {
-  return api.post<SingleCommentResponse>(`/movies/${movieId}/comments`, {
-    content
-  });
+  return api.post<SingleCommentResponse>(
+    `/movies/${movieId}/comments`,
+    { content },
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    }
+  );
 };
 
 // Cập nhật bình luận
 export const updateComment = async (movieId: string, commentId: string, content: string) => {
-  return api.put<SingleCommentResponse>(`/movies/${movieId}/comments/${commentId}`, {
-    content
-  });
+  return api.put<SingleCommentResponse>(
+    `/movies/${movieId}/comments/${commentId}`,
+    { content },
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    }
+  );
 };
 
 // Xóa bình luận
 export const deleteComment = async (movieId: string, commentId: string) => {
-  return api.delete<{ success: boolean }>(`/movies/${movieId}/comments/${commentId}`);
+  return api.delete<{ success: boolean }>(
+    `/movies/${movieId}/comments/${commentId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    }
+  );
 };
