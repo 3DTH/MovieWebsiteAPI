@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiSearch,
@@ -16,24 +16,24 @@ import MovieCard from "@/components/ui/MovieCard";
 import MovieListItem from "@/components/ui/MovieListItem";
 import MovieGridCard from "@/components/ui/MovieGridCard";
 import { 
-  getMovies, 
-  getNewMovies, 
   searchMovies, 
-  getPopularMovies,
-  getTopRatedMovies,
-  Movie 
+  getFilteredMovies, 
+  Movie, 
+  MovieFilterParams
 } from "@/app/api/movieApi";
 
-// Sample data - replace with your actual API calls
+// Update the genres array with correct TMDB IDs
 const genres = [
-  { id: "action", name: "Hành động" },
-  { id: "comedy", name: "Hài hước" },
-  { id: "drama", name: "Chính kịch" },
-  { id: "horror", name: "Kinh dị" },
-  { id: "romance", name: "Lãng mạn" },
-  { id: "scifi", name: "Khoa học viễn tưởng" },
-  { id: "fantasy", name: "Thần thoại" },
-  { id: "thriller", name: "Giật gân" },
+  { id: "12", name: "Phim Phiêu Lưu" },
+  { id: "14", name: "Phim Giả Tượng" },
+  { id: "16", name: "Phim Hoạt Hình" },
+  { id: "18", name: "Chính Kịch" },
+  { id: "27", name: "Kinh Dị" },
+  { id: "28", name: "Hành Động" },
+  { id: "35", name: "Hài Hước" },
+  { id: "53", name: "Giật Gân" },
+  { id: "878", name: "Khoa học Viễn Tưởng" },
+  { id: "10749", name: "Lãng Mạn" },
 ];
 
 const years = [
@@ -68,10 +68,8 @@ const sortOptions = [
 ];
 
 const types = [
-  { id: "all", name: "Tất cả" },
   { id: "movie", name: "Phim lẻ" },
   { id: "series", name: "Phim bộ" },
-  { id: "new", name: "Phim mới" },
 ];
 
 // Thêm các dữ liệu mẫu cho ratings và versions
@@ -101,7 +99,65 @@ const debounce = (func: Function, delay: number) => {
 };
 
 const MoviesPage = () => {
+  const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Update filterParams initial state to include default sorting
+  const [filterParams, setFilterParams] = useState<MovieFilterParams>({
+    keyword: searchParams.get('keyword') || undefined,
+    genres: searchParams.get('genres') || undefined,
+    year: searchParams.get('year') || undefined,
+    country: searchParams.get('country') || undefined,
+    rating: searchParams.get('rating') || undefined,
+    type: searchParams.get('type') || undefined,
+    version: searchParams.get('version') || undefined,
+    sort: searchParams.get('sort') || 'newest', // Default to newest
+    page: Number(searchParams.get('page')) || 1,
+    limit: 20
+  });
+
+  // Update the handleFilterChange function
+  const handleFilterChange = (filters: {
+    genres: string;
+    years: string;
+    countries: string;
+    sort: string;
+    type: string;
+    rating: string;
+    version: string;
+  }) => {
+    const newParams: MovieFilterParams = {
+      ...filterParams,
+      genres: filters.genres === "all" ? undefined : filters.genres,
+      year: filters.years === "all" ? undefined : filters.years,
+      country: filters.countries === "all" ? undefined : filters.countries,
+      sort: filters.sort,
+      type: filters.type === "all" ? undefined : filters.type,
+      rating: filters.rating === "all" ? undefined : filters.rating,
+      version: filters.version === "all" ? undefined : filters.version,
+      page: 1,
+      limit: 20
+    };
+  
+    // Update URL and state
+    const searchParams = new URLSearchParams();
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (value) {
+        searchParams.append(key, value.toString());
+      }
+    });
+  
+    setFilterParams(newParams);
+    setMovies([]); 
+    setFilteredMovies([]); 
+    router.push(`/movies?${searchParams.toString()}`);
+  };
+
+  // Update useEffect dependencies
+  useEffect(() => {
+    fetchMovies();
+  }, [filterParams]);
+
   const typeFromUrl = searchParams.get("type");
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -152,7 +208,6 @@ const MoviesPage = () => {
       // Filter by type
       if (activeFilters.type !== "all") {
         if (activeFilters.type === "new") {
-          // For now, we'll consider movies from the last year as "new"
           const oneYearAgo = new Date();
           oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
           results = results.filter((movie) => {
@@ -160,16 +215,14 @@ const MoviesPage = () => {
             return releaseDate >= oneYearAgo;
           });
         } else {
-          // This would need to be adjusted based on your actual data structure
-          // For now, we'll assume all are movies (not series)
           results = results;
         }
       }
 
-      // Filter by genres - would need to be adjusted based on your data structure
+      // Filter by genres - Updated to match backend structure
       if (activeFilters.genres.length > 0) {
         results = results.filter((movie) =>
-          movie.genres.some((genre) =>
+          movie.genres.some((genre) => 
             activeFilters.genres.includes(genre.id.toString())
           )
         );
@@ -222,38 +275,15 @@ const MoviesPage = () => {
     return () => clearTimeout(timer);
   }, [activeFilters, movies]);
 
-  const fetchMovies = async (isSearch = false) => {
+  const fetchMovies = async () => {
     setIsLoading(true);
     try {
-      let response;
-      if (isSearch && searchQuery.trim()) {
-        response = await searchMovies({
-          keyword: searchQuery,
-          genre: activeFilters.genres[0],
-          year: activeFilters.years[0],
-          rating: activeFilters.rating !== 'all' ? activeFilters.rating : undefined,
-          page: currentPage,
-          limit: moviesPerPage,
-        });
-      } else {
-        // Choose API based on active filter
-        switch (activeFilters.type) {
-          case 'popular':
-            response = await getPopularMovies(currentPage, moviesPerPage);
-            break;
-          case 'top-rated':
-            response = await getTopRatedMovies(currentPage, moviesPerPage);
-            break;
-          default:
-            // Default to new movies
-            response = await getNewMovies(currentPage, moviesPerPage);
-        }
-      }
-
+      const response = await getFilteredMovies(filterParams);
       if (response.data.success) {
         setMovies(response.data.data);
-        setTotalPages(response.data.totalPages || 1);
-        setTotalResults(response.data.total || 0);
+        setFilteredMovies(response.data.data);
+        setTotalPages(response.data.totalPages ?? 1);
+        setTotalResults(response.data.total ?? response.data.data.length);
       }
     } catch (error) {
       console.error("Error fetching movies:", error);
@@ -317,27 +347,6 @@ const MoviesPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Cập nhật hàm handleFilterChange để phù hợp với cấu trúc mới
-  const handleFilterChange = (filters: {
-    genres: string;
-    years: string;
-    countries: string;
-    sort: string;
-    type: string;
-    rating: string;
-    version: string;
-  }) => {
-    setActiveFilters({
-      genres: filters.genres === "all" ? [] : [filters.genres],
-      years: filters.years === "all" ? [] : [filters.years],
-      countries: filters.countries === "all" ? [] : [filters.countries],
-      sort: filters.sort,
-      type: filters.type,
-      rating: filters.rating,
-      version: filters.version,
-    });
   };
 
   // Add function to handle page changes
