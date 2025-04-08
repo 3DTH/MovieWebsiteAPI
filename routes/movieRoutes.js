@@ -6,6 +6,7 @@ const {
     getMovies,
     getMovieDetails,
     searchMovies,
+    addMovie,
     updateMovie,
     deleteMovie,
     syncNowPlayingMovies,
@@ -36,6 +37,7 @@ router.use('/:movieId/comments', commentRouter);
 router.use(protect);
 
 // Admin routes
+router.post('/', authorize('admin'), addMovie);
 router.post('/sync-popular', authorize('admin'), syncPopularMovies);
 router.post('/sync-now-playing', authorize('admin'), syncNowPlayingMovies);
 router.post('/sync-all', authorize('admin'), syncAllMovies);
