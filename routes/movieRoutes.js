@@ -2,19 +2,21 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const {
-  getMovies,
-  getMovieDetails,
-  searchMovies,
-  getFilteredMovies,
-  syncPopularMovies,
-  syncNowPlayingMovies,
-  syncAllMovies,
-  updateMovie,
-  deleteMovie,
-  uploadMovieFile,
-  getMovieEmbedUrl,
-  getSimilarMovies,
-  getNewMovies
+    syncPopularMovies,
+    getMovies,
+    getMovieDetails,
+    searchMovies,
+    addMovie,
+    updateMovie,
+    deleteMovie,
+    syncNowPlayingMovies,
+    syncAllMovies,
+    getMovieEmbedUrl,
+    uploadMovieFile,
+    getSimilarMovies,
+    getNewMovies,
+    getPopularMovies,
+    getTopRatedMovies
 } = require('../controllers/movieController');
 
 // Public routes
@@ -38,6 +40,7 @@ router.delete('/:id', deleteMovie);
 router.post('/:id/upload', uploadMovieFile);
 
 // Admin routes
+router.post('/', authorize('admin'), addMovie);
 router.post('/sync-popular', authorize('admin'), syncPopularMovies);
 router.post('/sync-now-playing', authorize('admin'), syncNowPlayingMovies);
 router.post('/sync-all', authorize('admin'), syncAllMovies);

@@ -381,6 +381,92 @@ exports.searchMovies = async (req, res, next) => {
     next(error);
   }
 };
+// API thêm phim mới
+exports.addMovie = async (req, res, next) => {
+  try {
+    const {
+      tmdbId,
+      title,
+      originalTitle,
+      overview,
+      posterPath,
+      backdropPath,
+      releaseDate,
+      voteAverage,
+      voteCount,
+      popularity,
+      isPopular,
+      nowPlaying,
+      genres,
+      videos,
+      cast,
+      directors
+    } = req.body;
+
+    // Check if movie already exists
+    const existingMovie = await Movie.findOne({ tmdbId });
+    if (existingMovie) {
+      return next(new ErrorResponse("Movie already exists", 400));
+    }
+
+    const movie = await Movie.create({
+      tmdbId,
+      title,
+      originalTitle,
+      overview,
+      posterPath,
+      backdropPath,
+      releaseDate,
+      voteAverage,
+      voteCount,
+      popularity,
+      isPopular: isPopular || false,
+      nowPlaying: nowPlaying || false,
+      genres: genres || [],
+      videos: videos || [],
+      cast: cast || [],
+      directors: directors || [],
+      lastUpdated: new Date()
+    });
+
+    // If there are cast members, update their movies list
+    if (cast && cast.length > 0) {
+      for (const castMember of cast) {
+        await Actor.findByIdAndUpdate(castMember.actor._id, {
+          $addToSet: {
+            movies: {
+              movie: movie._id,
+              character: castMember.character,
+              order: castMember.order,
+            },
+          },
+        });
+      }
+    }
+
+    // If there are directors, update their movies list
+    if (directors && directors.length > 0) {
+      for (const director of directors) {
+        await Actor.findByIdAndUpdate(director._id, {
+          $addToSet: {
+            movies: {
+              movie: movie._id,
+              character: "Director",
+              order: 0,
+            },
+          },
+        });
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      data: movie
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // API cập nhật thông tin phim
 exports.updateMovie = async (req, res, next) => {
