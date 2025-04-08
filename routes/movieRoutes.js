@@ -1,4 +1,5 @@
 const express = require('express');
+const commentRouter = require('./commentRoutes');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const {
@@ -26,6 +27,9 @@ router.get('/new', getNewMovies);
 router.get('/:id', getMovieDetails);
 router.get('/:id/similar', getSimilarMovies);
 router.get('/:id/embed', getMovieEmbedUrl);
+
+// Re-route vào comment routes
+router.use('/:movieId/comments', commentRouter);
 
 // Protected admin routes
 router.use(protect);

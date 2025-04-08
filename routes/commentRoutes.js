@@ -8,14 +8,11 @@ const {
     deleteComment
 } = require('../controllers/commentController');
 
-// Move all routes BEFORE the protect middleware
-// Public routes
+// Public route - không cần xác thực
 router.get('/', getComments);
 
-// Protected routes - everything after this middleware requires authentication
+// Protected routes - yêu cầu xác thực
 router.use(protect);
-
-// Routes that require authentication
 router.post('/', addComment);
 router.put('/:id', updateComment);
 router.delete('/:id', deleteComment);
