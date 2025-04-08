@@ -111,7 +111,7 @@ const MoviesPage = () => {
     rating: searchParams.get('rating') || undefined,
     type: searchParams.get('type') || undefined,
     version: searchParams.get('version') || undefined,
-    sort: searchParams.get('sort') || 'newest', // Default to newest
+    sort: searchParams.get('sort') || 'newest',
     page: Number(searchParams.get('page')) || 1,
     limit: 20
   });
