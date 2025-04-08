@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { ErrorResponse } = require('./error');
 
-// Middleware bảo vệ route
+// Middleware kiểm tra đăng nhập
 exports.protect = async (req, res, next) => {
     try {
         let token;

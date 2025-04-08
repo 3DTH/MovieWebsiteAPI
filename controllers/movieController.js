@@ -1,13 +1,13 @@
 const Movie = require("../models/Movie");
 const tmdbApi = require("../utils/tmdb");
-const { ErrorResponse } = require("../middleware/error");
 const Comment = require("../models/Comment");
 const Actor = require("../models/Actor");
 const User = require("../models/User");
 const googleDriveService = require("../services/googleDriveService");
-const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const multer = require("multer");
+const { ErrorResponse } = require("../middleware/error");
 
 // Cập nhật danh sách phim phổ biến
 exports.syncPopularMovies = async (req, res, next) => {
@@ -519,7 +519,13 @@ exports.uploadMovieFile = async (req, res, next) => {
       }
 
       const { id } = req.params;
-      const movie = await Movie.findOne({ tmdbId: id });
+      // Check if id is MongoDB ObjectId
+      const isMongoId = /^[0-9a-fA-F]{24}$/.test(id);
+      
+      // Find movie by either MongoDB _id or tmdbId
+      const movie = await Movie.findOne(
+        isMongoId ? { _id: id } : { tmdbId: parseInt(id) }
+      );
 
       if (!movie) {
         return next(new Error("Không tìm thấy phim"));

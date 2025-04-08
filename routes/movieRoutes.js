@@ -39,8 +39,8 @@ router.use(protect);
 router.post('/sync-popular', authorize('admin'), syncPopularMovies);
 router.post('/sync-now-playing', authorize('admin'), syncNowPlayingMovies);
 router.post('/sync-all', authorize('admin'), syncAllMovies);
+router.post('/:id/upload', authorize('admin'), uploadMovieFile);
 router.put('/:id', authorize('admin'), updateMovie);
 router.delete('/:id', authorize('admin'), deleteMovie);
-router.post('/:id/upload', authorize('admin'), uploadMovieFile);
 
 module.exports = router;
