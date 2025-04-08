@@ -66,7 +66,7 @@ export default function EditMoviePage({ params }: { params: { id: string } }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     // Check for admin token
     const adminToken = localStorage.getItem("adminToken");
     if (!adminToken) {
@@ -74,19 +74,20 @@ export default function EditMoviePage({ params }: { params: { id: string } }) {
       router.push("/admin/login");
       return;
     }
-
+  
     setIsSubmitting(true);
     try {
       console.log("Updating movie with data:", formData);
       await updateMovie(params.id, formData);
-
-      if (selectedFile) {
+  
+      if (selectedFile && movie) {  // Add movie check
         const uploadFormData = new FormData();
         uploadFormData.append("movieFile", selectedFile);
-        const uploadResponse = await uploadMovieFile(params.id, uploadFormData);
+        // Use movie._id instead of params.id
+        const uploadResponse = await uploadMovieFile(movie._id, uploadFormData);
         console.log("Upload response:", uploadResponse.data);
       }
-
+  
       router.push("/admin/movies");
     } catch (error) {
       console.error("Error in handleSubmit:", error);

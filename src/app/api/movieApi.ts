@@ -190,8 +190,9 @@ export const uploadMovieFile = async (id: string, formData: FormData) => {
     };
   }>(`/movies/${id}/upload`, formData, {
     headers: {
-      'Content-Type': 'multipart/form-data',
-    },
+      'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+      'Content-Type': 'multipart/form-data'
+    }
   });
 };
 
