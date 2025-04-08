@@ -639,8 +639,8 @@ exports.getSimilarMovies = async (req, res, next) => {
     const similarMovies = await Movie.aggregate([
       {
         $match: {
-          _id: { $ne: movie._id }, // Loại trừ phim hiện tại
-          'genres.id': { $in: genreIds } // Tìm phim có ít nhất 1 thể loại trùng khớp
+          _id: { $ne: movie._id }, 
+          'genres.id': { $in: genreIds } 
         }
       },
       {
