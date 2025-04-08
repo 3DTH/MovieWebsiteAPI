@@ -651,8 +651,8 @@ exports.getSimilarMovies = async (req, res, next) => {
       },
       {
         $sort: {
-          matchingGenres: -1, // Sắp xếp theo số lượng thể loại trùng khớp
-          voteAverage: -1 // Sau đó sắp xếp theo điểm đánh giá
+          matchingGenres: -1, 
+          voteAverage: -1 
         }
       },
       {
@@ -698,29 +698,84 @@ exports.getNewMovies = async (req, res, next) => {
 };
 
 // Lấy danh sách phim phổ biến
-exports.getPopularMovies = async (req, res, next) => {
+exports.getFilteredMovies = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    const [movies, total] = await Promise.all([
-      Movie.find({ isPopular: true })
-        .sort({ popularity: -1 })
-        .skip(skip)
-        .limit(limit),
-      Movie.countDocuments({ isPopular: true }),
-    ]);
+    // Build query
+    const query = {};
+    
+    // Handle keyword search
+    if (req.query.keyword) {
+      query.title = { $regex: req.query.keyword, $options: 'i' };
+    }
 
-    res.json({
+    if (req.query.genres) {
+      query['genres.id'] = parseInt(req.query.genres);
+    }
+
+    // Handle year filtering
+    if (req.query.year) {
+      const year = parseInt(req.query.year);
+      if (!isNaN(year)) {
+        query.releaseDate = {
+          $gte: new Date(`${year}-01-01`),
+          $lte: new Date(`${year}-12-31`)
+        };
+      }
+    }
+
+    // Handle country filtering
+    if (req.query.country) {
+      query.country = req.query.country;
+    }
+
+    // Handle version/language filtering
+    if (req.query.version) {
+      query.version = req.query.version;
+    }
+
+    // Get total count and filtered movies
+    const total = await Movie.countDocuments(query);
+    
+    // Apply sorting
+    let sortOption = {};
+    switch (req.query.sort) {
+      case 'newest':
+        sortOption = { releaseDate: -1 };
+        break;
+      case 'popular':
+        sortOption = { popularity: -1 };
+        break;
+      case 'rating':
+        sortOption = { voteAverage: -1 };
+        break;
+      case 'name-asc':
+        sortOption = { title: 1 };
+        break;
+      case 'name-desc':
+        sortOption = { title: -1 };
+        break;
+      default:
+        sortOption = { releaseDate: -1 }; // Default sort by newest
+    }
+
+    const movies = await Movie.find(query)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json({
       success: true,
-      count: movies.length,
+      data: movies,
       total,
       totalPages: Math.ceil(total / limit),
-      currentPage: page,
-      data: movies,
+      currentPage: page
     });
   } catch (error) {
+    console.error('Filter error:', error);
     next(error);
   }
 };
@@ -748,6 +803,131 @@ exports.getTopRatedMovies = async (req, res, next) => {
       currentPage: page,
       data: movies,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Advanced movie filtering
+exports.filterMovies = async (req, res, next) => {
+  try {
+    const {
+      keyword,
+      genres,
+      year,
+      country,
+      rating,
+      type,
+      version,
+      sort = 'newest',
+      page = 1,
+      limit = 20
+    } = req.query;
+
+    // Build query object
+    let query = {};
+    
+    // Keyword search
+    if (keyword) {
+      query.$or = [
+        { title: { $regex: keyword, $options: 'i' } },
+        { overview: { $regex: keyword, $options: 'i' } }
+      ];
+    }
+
+    // Genre filter
+    if (genres && genres !== 'all') {
+      query['genres.name'] = { $regex: genres, $options: 'i' };
+    }
+
+    // Year filter
+    if (year && year !== 'all') {
+      query.releaseDate = {
+        $gte: new Date(`${year}-01-01`),
+        $lte: new Date(`${year}-12-31`)
+      };
+    }
+
+    // Rating filter
+    if (rating && rating !== 'all') {
+      query.voteAverage = { $gte: parseFloat(rating) };
+    }
+
+    // Type filter (popular/new/etc)
+    if (type && type !== 'all') {
+      switch (type) {
+        case 'popular':
+          query.isPopular = true;
+          break;
+        case 'nowPlaying':
+          query.nowPlaying = true;
+          break;
+        case 'topRated':
+          query.voteAverage = { $gte: 7.5 };
+          break;
+      }
+    }
+
+    // Determine sort order
+    let sortQuery = {};
+    switch (sort) {
+      case 'newest':
+        sortQuery = { releaseDate: -1 };
+        break;
+      case 'oldest':
+        sortQuery = { releaseDate: 1 };
+        break;
+      case 'nameAsc':
+        sortQuery = { title: 1 };
+        break;
+      case 'nameDesc':
+        sortQuery = { title: -1 };
+        break;
+      case 'ratingDesc':
+        sortQuery = { voteAverage: -1 };
+        break;
+      case 'popularityDesc':
+        sortQuery = { popularity: -1 };
+        break;
+      default:
+        sortQuery = { releaseDate: -1 };
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Execute query with pagination
+    const [movies, total] = await Promise.all([
+      Movie.find(query)
+        .sort(sortQuery)
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Movie.countDocuments(query)
+    ]);
+
+    // Return response with filter parameters in metadata
+    res.json({
+      success: true,
+      metadata: {
+        filters: {
+          keyword,
+          genres,
+          year,
+          country,
+          rating,
+          type,
+          version,
+          sort
+        },
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          totalPages: Math.ceil(total / parseInt(limit))
+        }
+      },
+      data: movies
+    });
+
   } catch (error) {
     next(error);
   }
