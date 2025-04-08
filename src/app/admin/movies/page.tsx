@@ -187,6 +187,13 @@ export default function AdminMoviesPage() {
             />
             Đồng bộ Tất cả Phim
           </button>
+          <Link
+            href="/admin/movies/add"
+            className="px-4 py-2 flex items-center text-white bg-red-500 rounded-md hover:bg-red-600 transition-colors"
+          >
+            <FiPlus className="mr-2" />
+            Thêm phim mới
+          </Link>
         </motion.div>
       </div>
 

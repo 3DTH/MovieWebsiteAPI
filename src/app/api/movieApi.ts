@@ -50,6 +50,53 @@ export interface Movie {
   }[];
 }
 
+export interface AddMovie {
+  _id?: string;
+  tmdbId: number;
+  title: string;
+  originalTitle: string;
+  overview: string;
+  posterPath: string;
+  backdropPath: string;
+  releaseDate: string;
+  voteAverage: number;
+  voteCount: number;
+  popularity: number;
+  isPopular?: boolean;
+  nowPlaying?: boolean;
+  googleDrive?: {
+    fileId: string;
+    embedUrl: string;
+    uploadedAt: string;
+  };
+  genres: {
+    id: number;
+    name: string;
+  }[];
+  videos: {
+    key: string;
+    name: string;
+    site: string;
+    type: string;
+  }[];
+  cast: {
+    actor: {
+      _id: string;
+      tmdbId: number;
+      name: string;
+      profilePath: string;
+    };
+    character: string;
+    order: number;
+  }[];
+  directors: {
+    _id: string;
+    tmdbId: number;
+    name: string;
+    profilePath: string;
+  }[];
+}
+
 export interface MovieResponse {
   success: boolean;
   data: Movie[];
@@ -152,6 +199,14 @@ export const syncAllMovies = async (page = 1, totalPages = 1) => {
       'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
     },
     params: { page, totalPages }
+  });
+};
+// Thêm phim mới (chỉ cho admin)
+export const addMovie = async (movieData: Partial<AddMovie>) => {
+  return api.post<MovieDetailResponse>('/movies', movieData, {
+    headers: {
+      'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+    }
   });
 };
 
