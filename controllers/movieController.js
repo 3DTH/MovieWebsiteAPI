@@ -496,7 +496,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 2000 * 1024 * 1024 }, // Giới hạn 2GB
+  limits: { fileSize: 5000 * 1024 * 1024 }, // Giới hạn 5GB
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith("video/")) {
       cb(null, true);
