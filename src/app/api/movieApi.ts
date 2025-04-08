@@ -214,3 +214,32 @@ export const getPopularMovies = async (page: number = 1, limit: number = 20) => 
 export const getTopRatedMovies = async (page: number = 1, limit: number = 20) => {
   return api.get<MovieResponse>(`/movies/top-rated?page=${page}&limit=${limit}`);
 };
+
+// Add this interface for filter parameters
+export interface MovieFilterParams {
+  keyword?: string;
+  genres?: string | string[]; 
+  year?: string;
+  country?: string;
+  rating?: string;
+  type?: string;
+  version?: string;
+  sort?: string;
+  page: number;
+  limit: number;
+}
+
+// Add this function to handle filtered movies
+export const getFilteredMovies = async (params: MovieFilterParams) => {
+  // Convert params to URL search params
+  const searchParams = new URLSearchParams();
+  
+  Object.entries(params).forEach(([key, value]) => {
+    if (value && value !== 'all') {
+      searchParams.append(key, value.toString());
+    }
+  });
+
+  const queryString = searchParams.toString();
+  return api.get<MovieResponse>(`/movies/filter?${queryString}`);
+};
