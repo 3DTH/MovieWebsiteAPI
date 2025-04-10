@@ -1,6 +1,6 @@
 const express = require('express');
-const commentRouter = require('./commentRoutes');
 const router = express.Router();
+const commentRouter = require('./commentRoutes');
 const { protect, authorize } = require('../middleware/auth');
 const {
     syncPopularMovies,
@@ -15,7 +15,6 @@ const {
     getMovieEmbedUrl,
     uploadMovieFile,
     getSimilarMovies,
-    getNewMovies,
     getFilteredMovies
 } = require('../controllers/movieController');
 
@@ -23,7 +22,6 @@ const {
 router.get('/', getMovies);
 router.get('/search', searchMovies);
 router.get('/filter', getFilteredMovies);
-router.get('/new', getNewMovies);
 router.get('/:id', getMovieDetails);
 router.get('/:id/similar', getSimilarMovies);
 router.get('/:id/embed', getMovieEmbedUrl);

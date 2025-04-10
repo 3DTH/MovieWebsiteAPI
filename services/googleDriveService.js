@@ -115,8 +115,8 @@ const googleDriveService = {
         }
     },
     
-    // Upload file lên Google Drive (có thể chỉ định thư mục)
-    uploadFile: async (filePath, fileName, folderId = null) => {
+    // Upload file từ buffer lên Google Drive
+    uploadFileFromBuffer: async (buffer, fileName, mimeType, folderId = null) => {
         try {
             const auth = await authorize();
             const drive = google.drive({ version: 'v3', auth });
@@ -125,14 +125,13 @@ const googleDriveService = {
                 name: fileName
             };
             
-            // Nếu có folderId, thêm file vào thư mục đó
             if (folderId) {
                 fileMetadata.parents = [folderId];
             }
             
             const media = {
-                mimeType: 'video/mp4',
-                body: fs.createReadStream(filePath)
+                mimeType: mimeType,
+                body: require('stream').Readable.from(buffer)
             };
             
             const response = await drive.files.create({
@@ -159,7 +158,7 @@ const googleDriveService = {
                 downloadUrl: `https://drive.google.com/uc?export=download&id=${response.data.id}`
             };
         } catch (error) {
-            console.error('Lỗi khi upload file lên Google Drive:', error);
+            console.error('Lỗi khi upload file từ buffer lên Google Drive:', error);
             throw error;
         }
     },
@@ -181,77 +180,6 @@ const googleDriveService = {
         }
     },
     
-    // Lấy danh sách file và thư mục trong một thư mục cụ thể
-    listFilesInFolder: async (folderId = null, pageSize = 100) => {
-        try {
-            const auth = await authorize();
-            const drive = google.drive({ version: 'v3', auth });
-            
-            let query = 'trashed=false';
-            
-            // Nếu có folderId, chỉ lấy các file trong thư mục đó
-            if (folderId) {
-                query += ` and '${folderId}' in parents`;
-            }
-            
-            const response = await drive.files.list({
-                q: query,
-                pageSize: pageSize,
-                fields: 'nextPageToken, files(id, name, mimeType, size, createdTime, parents)'
-            });
-            
-            return response.data.files;
-        } catch (error) {
-            console.error('Lỗi khi lấy danh sách file:', error);
-            throw error;
-        }
-    },
-    
-    // Lấy danh sách tất cả các file
-    listFiles: async (pageSize = 10) => {
-        try {
-            const auth = await authorize();
-            const drive = google.drive({ version: 'v3', auth });
-            
-            const response = await drive.files.list({
-                pageSize: pageSize,
-                fields: 'nextPageToken, files(id, name, mimeType, size, createdTime)'
-            });
-            
-            return response.data.files;
-        } catch (error) {
-            console.error('Lỗi khi lấy danh sách file:', error);
-            throw error;
-        }
-    },
-    
-    // Tạo cấu trúc thư mục nhiều cấp
-    createFolderPath: async (folderPath) => {
-        try {
-            // Tách đường dẫn thư mục thành mảng
-            const folders = folderPath.split('/').filter(folder => folder.trim() !== '');
-            
-            let parentId = null;
-            let currentPath = '';
-            
-            // Tạo từng thư mục theo thứ tự
-            for (const folder of folders) {
-                currentPath += `/${folder}`;
-                
-                // Tìm hoặc tạo thư mục
-                const folderInfo = await googleDriveService.findOrCreateFolder(folder, parentId);
-                parentId = folderInfo.id;
-            }
-            
-            return {
-                id: parentId,
-                path: folderPath
-            };
-        } catch (error) {
-            console.error('Lỗi khi tạo cấu trúc thư mục:', error);
-            throw error;
-        }
-    }
 };
 
 module.exports = googleDriveService;

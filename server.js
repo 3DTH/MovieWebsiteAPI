@@ -13,6 +13,7 @@ const actorRoutes = require('./routes/actorRoutes');
 const passport = require('passport');
 const { errorHandler }  = require("./middleware/error");
 require('./config/passport');
+const uploadRoutes = require('./routes/uploadRoutes');
 
 // Connect to database
 connectDB();
@@ -27,12 +28,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; " +  // Chỉ cho phép tài nguyên từ cùng nguồn gốc
-    "frame-src 'self' https://drive.google.com; " + // Cho phép nhúng iframe từ nguồn gốc và Google Drive
-    "media-src 'self' https://drive.google.com; " + // Cho phép phát media từ nguồn gốc và Google Drive
-    "img-src 'self' https://image.tmdb.org data:; " + // Cho phép hình ảnh từ nguồn gốc, TMDB và data URLs
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " + // Cho phép JavaScript từ nguồn gốc và inline scripts
-    "style-src 'self' 'unsafe-inline'; " + // Cho phép CSS từ nguồn gốc và inline styles
+    "default-src 'self'; " +
+    "frame-src 'self' https://drive.google.com; " +
+    "media-src 'self' https://drive.google.com; " +
+    "img-src 'self' https://image.tmdb.org data: https://* http://*; " + // Cho phép tất cả các domain https và http
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+    "style-src 'self' 'unsafe-inline'; " +
     "connect-src 'self' http://localhost:8080 https://api.themoviedb.org" // Cho phép kết nối API đến các domain được chỉ định
   );
   next();
@@ -59,6 +60,7 @@ app.use("/api/actors", actorRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use('/api/favorites', favoriteRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // Thêm middleware passport
 app.use(passport.initialize());
