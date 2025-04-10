@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { addMovie } from "@/app/api/movieApi";
 import { FiSave, FiX } from "react-icons/fi";
+import ImageUpload from '@/components/admin/ImageUpload';
 
 export default function AddMoviePage() {
   const router = useRouter();
@@ -153,24 +154,25 @@ export default function AddMoviePage() {
           </div>
         </div>
 
+        // Update the Images section in the form:
         {/* Images */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Poster Path
+              Poster Image
             </label>
-            <input
-              type="text"
-              name="posterPath"
-              value={formData.posterPath}
-              onChange={handleInputChange}
-              placeholder="/path-to-poster.jpg"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+            <ImageUpload 
+              onImageUploaded={(url) => {
+                setFormData(prev => ({
+                  ...prev,
+                  posterPath: url
+                }));
+              }}
             />
             {formData.posterPath && (
               <div className="mt-2 relative h-48 w-32 rounded-lg overflow-hidden">
                 <img
-                  src={`https://image.tmdb.org/t/p/w500${formData.posterPath}`}
+                  src={formData.posterPath}
                   alt="Poster preview"
                   className="object-cover w-full h-full"
                 />
@@ -180,20 +182,20 @@ export default function AddMoviePage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Backdrop Path
+              Backdrop Image
             </label>
-            <input
-              type="text"
-              name="backdropPath"
-              value={formData.backdropPath}
-              onChange={handleInputChange}
-              placeholder="/path-to-backdrop.jpg"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+            <ImageUpload 
+              onImageUploaded={(url) => {
+                setFormData(prev => ({
+                  ...prev,
+                  backdropPath: url
+                }));
+              }}
             />
             {formData.backdropPath && (
               <div className="mt-2 relative h-32 w-full rounded-lg overflow-hidden">
                 <img
-                  src={`https://image.tmdb.org/t/p/w1280${formData.backdropPath}`}
+                  src={formData.backdropPath}
                   alt="Backdrop preview"
                   className="object-cover w-full h-full"
                 />

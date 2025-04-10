@@ -1,20 +1,30 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import { FiArrowLeft, FiStar, FiFilm, FiCalendar, FiAward, FiHeart, FiShare2, FiBookmark, FiLoader } from 'react-icons/fi';
-import { getActorDetails, Actor } from '@/app/api/actorApi';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import {
+  FiArrowLeft,
+  FiStar,
+  FiFilm,
+  FiCalendar,
+  FiAward,
+  FiHeart,
+  FiShare2,
+  FiBookmark,
+  FiLoader,
+} from "react-icons/fi";
+import { getActorDetails, Actor } from "@/app/api/actorApi";
 
 export default function ActorDetailPage() {
   const params = useParams();
   const router = useRouter();
   const actorId = params.id as string;
-  
+
   const [actor, setActor] = useState<Actor | null>(null);
-  const [activeTab, setActiveTab] = useState('filmography');
+  const [activeTab, setActiveTab] = useState("filmography");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,10 +32,10 @@ export default function ActorDetailPage() {
   useEffect(() => {
     const fetchActor = async () => {
       if (!actorId) return;
-      
+
       setIsLoading(true);
       setError(null);
-      
+
       try {
         const response = await getActorDetails(actorId);
         if (response.success) {
@@ -47,47 +57,54 @@ export default function ActorDetailPage() {
   // Animation variants
   const pageVariants = {
     initial: { opacity: 0 },
-    animate: { 
+    animate: {
       opacity: 1,
-      transition: { 
+      transition: {
         duration: 0.5,
-        staggerChildren: 0.1
-      }
+        staggerChildren: 0.1,
+      },
     },
-    exit: { opacity: 0 }
+    exit: { opacity: 0 },
   };
 
   const itemVariants = {
     initial: { y: 20, opacity: 0 },
-    animate: { 
-      y: 0, 
+    animate: {
+      y: 0,
       opacity: 1,
-      transition: { type: 'spring', stiffness: 100 }
-    }
+      transition: { type: "spring", stiffness: 100 },
+    },
   };
 
   // Calculate age
   const calculateAge = (birthDate: string) => {
-    if (!birthDate) return 'N/A';
-    
+    if (!birthDate) return "N/A";
+
     const today = new Date();
     const birth = new Date(birthDate);
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birth.getDate())
+    ) {
       age--;
     }
-    
+
     return age;
   };
 
   // Format date
   const formatDate = (dateString: string) => {
-    if (!dateString) return 'N/A';
-    
-    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('vi-VN', options);
+    if (!dateString) return "N/A";
+
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    };
+    return new Date(dateString).toLocaleDateString("vi-VN", options);
   };
 
   if (isLoading) {
@@ -104,8 +121,8 @@ export default function ActorDetailPage() {
         <h1 className="text-2xl font-bold text-red-600 mb-4">
           {error || "Không tìm thấy diễn viên"}
         </h1>
-        <button 
-          onClick={() => router.back()} 
+        <button
+          onClick={() => router.back()}
           className="px-4 py-2 bg-red-600 text-white rounded-md"
         >
           Quay lại
@@ -115,7 +132,7 @@ export default function ActorDetailPage() {
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black pt-16 pb-16"
       variants={pageVariants}
       initial="initial"
@@ -137,7 +154,13 @@ export default function ActorDetailPage() {
         {/* Cover Image with Parallax */}
         <div className="absolute inset-0">
           <Image
-            src={`https://image.tmdb.org/t/p/original${actor.profilePath}`}
+            src={
+              actor.profilePath
+                ? actor.profilePath.startsWith("http")
+                  ? actor.profilePath
+                  : `https://image.tmdb.org/t/p/original${actor.profilePath}`
+                : "/images/placeholder-actor.jpg"
+            }
             alt={`${actor.name} cover`}
             fill
             priority
@@ -150,12 +173,18 @@ export default function ActorDetailPage() {
         <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 z-10">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-end md:items-center gap-6">
             {/* Profile Image */}
-            <motion.div 
+            <motion.div
               variants={itemVariants}
               className="relative w-32 h-32 md:w-48 md:h-48 rounded-full overflow-hidden border-4 border-white shadow-2xl"
             >
               <Image
-                src={`https://image.tmdb.org/t/p/w500${actor.profilePath}`}
+                src={
+                  actor.profilePath
+                    ? actor.profilePath.startsWith("http")
+                      ? actor.profilePath
+                      : `https://image.tmdb.org/t/p/w500${actor.profilePath}`
+                    : "/images/placeholder-actor.jpg"
+                }
                 alt={actor.name}
                 fill
                 className="object-cover"
@@ -164,14 +193,14 @@ export default function ActorDetailPage() {
 
             {/* Actor Details */}
             <div className="flex-1">
-              <motion.h1 
+              <motion.h1
                 variants={itemVariants}
                 className="text-4xl md:text-6xl font-bold text-white mb-2"
               >
                 {actor.name}
               </motion.h1>
-              
-              <motion.div 
+
+              <motion.div
                 variants={itemVariants}
                 className="flex flex-wrap items-center gap-4 text-gray-300 mb-4"
               >
@@ -197,7 +226,7 @@ export default function ActorDetailPage() {
               </motion.div>
 
               {/* Action Buttons */}
-              <motion.div 
+              <motion.div
                 variants={itemVariants}
                 className="flex flex-wrap gap-3"
               >
@@ -234,16 +263,16 @@ export default function ActorDetailPage() {
           {/* Left Column - Biography and Info */}
           <div className="lg:col-span-2">
             {/* Biography */}
-            <motion.div 
+            <motion.div
               variants={itemVariants}
               className="bg-gray-900/60 backdrop-blur-sm rounded-xl p-6 mb-8"
             >
               <h2 className="text-2xl font-bold mb-4">Tiểu sử</h2>
               <div className="text-gray-300 space-y-4">
                 {actor.biography ? (
-                  actor.biography.split('\n\n').map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
-                  ))
+                  actor.biography
+                    .split("\n\n")
+                    .map((paragraph, index) => <p key={index}>{paragraph}</p>)
                 ) : (
                   <p>Không có thông tin tiểu sử.</p>
                 )}
@@ -251,22 +280,22 @@ export default function ActorDetailPage() {
             </motion.div>
 
             {/* Tabs Navigation */}
-            <motion.div 
+            <motion.div
               variants={itemVariants}
               className="mb-6 border-b border-gray-800"
             >
               <div className="flex overflow-x-auto scrollbar-hide">
-                {['filmography'].map((tab) => (
+                {["filmography"].map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
                     className={`px-6 py-3 font-medium transition-colors whitespace-nowrap ${
-                      activeTab === tab 
-                        ? 'text-red-500 border-b-2 border-red-500' 
-                        : 'text-gray-400 hover:text-white'
+                      activeTab === tab
+                        ? "text-red-500 border-b-2 border-red-500"
+                        : "text-gray-400 hover:text-white"
                     }`}
                   >
-                    {tab === 'filmography' && 'Phim đã tham gia'}
+                    {tab === "filmography" && "Phim đã tham gia"}
                   </button>
                 ))}
               </div>
@@ -274,7 +303,7 @@ export default function ActorDetailPage() {
 
             {/* Tab Content */}
             <AnimatePresence mode="wait">
-              {activeTab === 'filmography' && (
+              {activeTab === "filmography" && (
                 <motion.div
                   key="filmography"
                   initial={{ opacity: 0, y: 10 }}
@@ -290,10 +319,21 @@ export default function ActorDetailPage() {
                           whileHover={{ scale: 1.03 }}
                           className="flex bg-gray-800/50 rounded-lg overflow-hidden"
                         >
-                          <Link href={`/movies/${movieItem.movie.tmdbId}`} className="w-1/3 relative">
+                          <Link
+                            href={`/movies/${movieItem.movie.tmdbId}`}
+                            className="w-1/3 relative"
+                          >
                             <div className="relative aspect-[2/3] h-full">
                               <Image
-                                src={`https://image.tmdb.org/t/p/w300${movieItem.movie.posterPath}`}
+                                src={
+                                  movieItem.movie.posterPath
+                                    ? movieItem.movie.posterPath.startsWith(
+                                        "http"
+                                      )
+                                      ? movieItem.movie.posterPath
+                                      : `https://image.tmdb.org/t/p/w300${movieItem.movie.posterPath}`
+                                    : "/images/movie-placeholder.jpg"
+                                }
                                 alt={movieItem.movie.title}
                                 fill
                                 className="object-cover"
@@ -308,11 +348,13 @@ export default function ActorDetailPage() {
                             </Link>
                             <div className="flex items-center mt-1">
                               <span className="text-gray-400 text-sm">
-                                {new Date(movieItem.movie.releaseDate).getFullYear()}
+                                {new Date(
+                                  movieItem.movie.releaseDate
+                                ).getFullYear()}
                               </span>
                             </div>
                             <p className="text-gray-300 text-sm mt-2 italic">
-                              as {movieItem.character || 'Unknown'}
+                              as {movieItem.character || "Unknown"}
                             </p>
                           </div>
                         </motion.div>
@@ -329,12 +371,12 @@ export default function ActorDetailPage() {
           {/* Right Column - Stats and Related */}
           <div>
             {/* Stats Card */}
-            <motion.div 
+            <motion.div
               variants={itemVariants}
               className="bg-gray-900/60 backdrop-blur-sm rounded-xl p-6 mb-8"
             >
               <h2 className="text-xl font-bold mb-4">Thông tin</h2>
-              
+
               <div className="space-y-4">
                 {actor.birthday && (
                   <div>
@@ -342,29 +384,31 @@ export default function ActorDetailPage() {
                     <p className="text-white">{formatDate(actor.birthday)}</p>
                   </div>
                 )}
-                
+
                 {actor.placeOfBirth && (
                   <div>
                     <h3 className="text-gray-400 text-sm">Nơi sinh</h3>
                     <p className="text-white">{actor.placeOfBirth}</p>
                   </div>
                 )}
-                
+
                 <div>
                   <h3 className="text-gray-400 text-sm">Độ phổ biến</h3>
                   <div className="mt-1 relative pt-1">
                     <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-700">
-                      <div 
-                        style={{ width: `${Math.min(actor.popularity, 100)}%` }} 
+                      <div
+                        style={{ width: `${Math.min(actor.popularity, 100)}%` }}
                         className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-red-500 to-purple-600"
                       ></div>
                     </div>
-                    <span className="text-white text-sm mt-1">{actor.popularity.toFixed(1)}%</span>
+                    <span className="text-white text-sm mt-1">
+                      {actor.popularity.toFixed(1)}%
+                    </span>
                   </div>
                 </div>
               </div>
-              </motion.div>
-            
+            </motion.div>
+
             {/* Similar Actors - We can add this if API provides similar actors */}
             {/* <motion.div 
               variants={itemVariants}
@@ -398,45 +442,52 @@ export default function ActorDetailPage() {
             </motion.div> */}
           </div>
         </div>
-        
+
         {/* Notable Movies Section */}
         {actor.movies && actor.movies.length > 0 && (
-          <motion.div 
-            variants={itemVariants}
-            className="mt-16"
-          >
+          <motion.div variants={itemVariants} className="mt-16">
             <h2 className="text-2xl font-bold mb-6">Phim nổi bật</h2>
-            
+
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {actor.movies.slice(0, 6).map((movieItem, index) => (
                 <motion.div
                   key={index}
-                  whileHover={{ 
+                  whileHover={{
                     scale: 1.05,
                     rotateY: 5,
                     rotateX: -5,
-                    z: 50
+                    z: 50,
                   }}
                   className="relative rounded-lg overflow-hidden bg-gray-800"
-                  style={{ 
-                    transformStyle: 'preserve-3d',
-                    perspective: '1000px'
+                  style={{
+                    transformStyle: "preserve-3d",
+                    perspective: "1000px",
                   }}
                 >
                   <Link href={`/movies/${movieItem.movie.tmdbId}`}>
                     <div className="aspect-[2/3] relative">
                       <Image
-                        src={`https://image.tmdb.org/t/p/w300${movieItem.movie.posterPath}`}
+                        src={
+                          movieItem.movie.posterPath
+                            ? movieItem.movie.posterPath.startsWith("http")
+                              ? movieItem.movie.posterPath
+                              : `https://image.tmdb.org/t/p/w300${movieItem.movie.posterPath}`
+                            : "/images/movie-placeholder.jpg"
+                        }
                         alt={movieItem.movie.title}
                         fill
                         className="object-cover"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
                       <div className="absolute bottom-0 left-0 right-0 p-3">
-                        <h3 className="text-white font-medium text-sm truncate">{movieItem.movie.title}</h3>
+                        <h3 className="text-white font-medium text-sm truncate">
+                          {movieItem.movie.title}
+                        </h3>
                         <div className="flex items-center mt-1">
                           <span className="text-xs text-gray-300">
-                            {new Date(movieItem.movie.releaseDate).getFullYear()}
+                            {new Date(
+                              movieItem.movie.releaseDate
+                            ).getFullYear()}
                           </span>
                         </div>
                       </div>
@@ -447,16 +498,19 @@ export default function ActorDetailPage() {
             </div>
           </motion.div>
         )}
-        
+
         {/* Newsletter Section */}
-        <motion.div 
+        <motion.div
           variants={itemVariants}
           className="mt-20 bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-8"
         >
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-2xl font-bold mb-4">Nhận thông báo về {actor.name}</h2>
+            <h2 className="text-2xl font-bold mb-4">
+              Nhận thông báo về {actor.name}
+            </h2>
             <p className="text-gray-300 mb-6">
-              Đăng ký để nhận thông báo về phim mới, sự kiện và tin tức mới nhất về {actor.name}
+              Đăng ký để nhận thông báo về phim mới, sự kiện và tin tức mới nhất
+              về {actor.name}
             </p>
             <form className="flex flex-col sm:flex-row gap-2 max-w-lg mx-auto">
               <input

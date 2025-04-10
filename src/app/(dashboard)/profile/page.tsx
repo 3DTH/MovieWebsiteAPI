@@ -839,7 +839,13 @@ export default function ProfilePage() {
                     {/* Movie Poster */}
                     <div className="relative aspect-[2/3] overflow-hidden">
                       <Image
-                        src={`https://image.tmdb.org/t/p/w500${movie.posterPath}`}
+                        src={
+                          movie.posterPath
+                            ? movie.posterPath.startsWith("http")
+                              ? movie.posterPath
+                              : `https://image.tmdb.org/t/p/w500${movie.posterPath}`
+                            : "/images/movie-placeholder.jpg"
+                        }
                         alt={movie.title}
                         fill
                         className="object-cover transform group-hover:scale-110 transition-transform duration-300"
@@ -852,14 +858,18 @@ export default function ProfilePage() {
                       <h3 className="text-lg font-semibold text-white line-clamp-1 group-hover:text-red-500 transition-colors">
                         {movie.title}
                       </h3>
-                      
+
                       <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center text-gray-400">
                           <FiCalendar className="mr-1" />
-                          <span>{new Date(movie.releaseDate).getFullYear()}</span>
+                          <span>
+                            {new Date(movie.releaseDate).getFullYear()}
+                          </span>
                         </div>
                         <div className="flex items-center text-yellow-500">
-                          <span className="mr-1">{movie.voteAverage.toFixed(1)}</span>
+                          <span className="mr-1">
+                            {movie.voteAverage.toFixed(1)}
+                          </span>
                           <span>⭐</span>
                         </div>
                       </div>
@@ -884,14 +894,17 @@ export default function ProfilePage() {
                   Chưa có phim yêu thích
                 </h3>
                 <p className="text-gray-400 text-center mb-8 max-w-md">
-                  Khám phá và thêm những bộ phim bạn yêu thích vào danh sách để xem lại sau nhé!
+                  Khám phá và thêm những bộ phim bạn yêu thích vào danh sách để
+                  xem lại sau nhé!
                 </p>
                 <Link
                   href="/movies"
                   className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-full text-white transition-colors inline-flex items-center space-x-2 group"
                 >
                   <span>Khám phá ngay</span>
-                  <span className="transform transition-transform group-hover:translate-x-1">→</span>
+                  <span className="transform transition-transform group-hover:translate-x-1">
+                    →
+                  </span>
                 </Link>
               </div>
             )}

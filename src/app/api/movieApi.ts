@@ -269,26 +269,16 @@ export const getSimilarMovies = async (movieId: string, limit = 4) => {
   return api.get<MovieResponse>(`/movies/${movieId}/similar?limit=${limit}`);
 };
 
-// Lấy danh sách phim mới
-export const getNewMovies = async (page: number = 1, limit: number = 20) => {
-  return api.get<MovieResponse>(`/movies/new?page=${page}&limit=${limit}`);
-};
-
 // Lấy danh sách phim phổ biến
 export const getPopularMovies = async (page: number = 1, limit: number = 20) => {
   return api.get<MovieResponse>(`/movies/popular?page=${page}&limit=${limit}`);
-};
-
-// Lấy danh sách phim đánh giá cao
-export const getTopRatedMovies = async (page: number = 1, limit: number = 20) => {
-  return api.get<MovieResponse>(`/movies/top-rated?page=${page}&limit=${limit}`);
 };
 
 // Lọc phim
 export const getFilteredMovies = async (params: MovieFilterParams) => {
   // Convert params to URL search params
   const searchParams = new URLSearchParams();
-  
+  // Chỉ thêm các tham số có giá trị và khác 'all'
   Object.entries(params).forEach(([key, value]) => {
     if (value && value !== 'all') {
       searchParams.append(key, value.toString());

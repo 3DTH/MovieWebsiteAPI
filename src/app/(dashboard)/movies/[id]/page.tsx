@@ -18,7 +18,11 @@ import {
 import { getMovieDetails, Movie } from "@/app/api/movieApi";
 import CommentSection from "@/components/comments/CommentSection";
 import { useAuth } from "@/contexts/AuthContext";
-import { addToFavorites, removeFromFavorites, checkIsFavorite } from "@/app/api/favoriteApi";
+import {
+  addToFavorites,
+  removeFromFavorites,
+  checkIsFavorite,
+} from "@/app/api/favoriteApi";
 import { toast } from "react-hot-toast";
 
 // Format runtime to hours and minutes
@@ -58,7 +62,13 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
       <Link href={`/movies/${movie.tmdbId}`}>
         <div className="relative aspect-[2/3] rounded-lg overflow-hidden">
           <Image
-            src={`https://image.tmdb.org/t/p/w500${movie.posterPath}`}
+            src={
+              movie.posterPath
+                ? movie.posterPath.startsWith("http")
+                  ? movie.posterPath
+                  : `https://image.tmdb.org/t/p/w500${movie.posterPath}`
+                : "/images/movie-placeholder.jpg"
+            }
             alt={movie.title}
             fill
             className="object-cover"
@@ -211,7 +221,15 @@ export default function MovieDetail() {
         {/* Backdrop Image */}
         <div className="absolute inset-0">
           <Image
-            src={`https://image.tmdb.org/t/p/original${movie.backdropPath}`}
+            src={
+              movie.backdropPath
+                ? movie.backdropPath.startsWith("http")
+                  ? movie.backdropPath
+                  : `https://image.tmdb.org/t/p/original${movie.backdropPath}`
+                : movie.posterPath.startsWith("http")
+                ? movie.posterPath
+                : `https://image.tmdb.org/t/p/original${movie.posterPath}`
+            }
             alt={movie.title}
             fill
             priority
@@ -235,7 +253,13 @@ export default function MovieDetail() {
               >
                 <div className="relative h-full w-[250px] rounded-lg overflow-hidden shadow-2xl border-2 border-gray-700">
                   <Image
-                    src={`https://image.tmdb.org/t/p/w500${movie.posterPath}`}
+                    src={
+                      movie.posterPath
+                        ? movie.posterPath.startsWith("http")
+                          ? movie.posterPath
+                          : `https://image.tmdb.org/t/p/w500${movie.posterPath}`
+                        : "/images/movie-placeholder.jpg"
+                    }
                     alt={movie.title}
                     fill
                     className="object-cover"
@@ -348,14 +372,20 @@ export default function MovieDetail() {
                       whileTap={{ scale: 0.9 }}
                       onClick={handleFavoriteClick}
                       className={`flex items-center justify-center w-10 h-10 ${
-                        isFavorite 
-                          ? 'bg-red-600 hover:bg-red-700' 
-                          : 'bg-gray-800/80 hover:bg-gray-700/80'
+                        isFavorite
+                          ? "bg-red-600 hover:bg-red-700"
+                          : "bg-gray-800/80 hover:bg-gray-700/80"
                       } text-white rounded-full transition-colors`}
-                      aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                      aria-label={
+                        isFavorite
+                          ? "Remove from favorites"
+                          : "Add to favorites"
+                      }
                     >
-                      <FiHeart 
-                        className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} 
+                      <FiHeart
+                        className={`h-5 w-5 ${
+                          isFavorite ? "fill-current" : ""
+                        }`}
                       />
                     </motion.button>
                     <motion.button
@@ -381,7 +411,13 @@ export default function MovieDetail() {
           <div className="md:hidden mb-8">
             <div className="relative aspect-[2/3] w-48 max-w-full mx-auto rounded-lg overflow-hidden shadow-lg">
               <Image
-                src={`https://image.tmdb.org/t/p/w500${movie.posterPath}`}
+                src={
+                  movie.posterPath
+                    ? movie.posterPath.startsWith("http")
+                      ? movie.posterPath
+                      : `https://image.tmdb.org/t/p/w500${movie.posterPath}`
+                    : "/images/movie-placeholder.jpg"
+                }
                 alt={movie.title}
                 fill
                 className="object-cover object-center"
@@ -518,7 +554,15 @@ export default function MovieDetail() {
                         >
                           <div className="relative aspect-[3/4] overflow-hidden">
                             <Image
-                              src={`https://image.tmdb.org/t/p/w200${castMember.actor.profilePath}`}
+                              src={
+                                castMember.actor.profilePath
+                                  ? castMember.actor.profilePath.startsWith(
+                                      "http"
+                                    )
+                                    ? castMember.actor.profilePath
+                                    : `https://image.tmdb.org/t/p/w200${castMember.actor.profilePath}`
+                                  : "/images/placeholder-actor.jpg"
+                              }
                               alt={castMember.actor.name}
                               fill
                               className="object-cover transition-transform duration-300 group-hover:scale-110"
@@ -559,7 +603,13 @@ export default function MovieDetail() {
                         <div key={index} className="text-center">
                           <div className="relative aspect-square rounded-full overflow-hidden mb-2 mx-auto w-24">
                             <Image
-                              src={`https://image.tmdb.org/t/p/w200${director.profilePath}`}
+                              src={
+                                director.profilePath
+                                  ? director.profilePath.startsWith("http")
+                                    ? director.profilePath
+                                    : `https://image.tmdb.org/t/p/w200${director.profilePath}`
+                                  : "/images/placeholder-actor.jpg"
+                              }
                               alt={director.name}
                               fill
                               className="object-cover"
@@ -587,7 +637,15 @@ export default function MovieDetail() {
                         >
                           <div className="relative aspect-[2/3] overflow-hidden">
                             <Image
-                              src={`https://image.tmdb.org/t/p/w300${castMember.actor.profilePath}`}
+                              src={
+                                castMember.actor.profilePath
+                                  ? castMember.actor.profilePath.startsWith(
+                                      "http"
+                                    )
+                                    ? castMember.actor.profilePath
+                                    : `https://image.tmdb.org/t/p/w300${castMember.actor.profilePath}`
+                                  : "/images/placeholder-actor.jpg"
+                              }
                               alt={castMember.actor.name}
                               fill
                               className="object-cover transition-transform duration-500 group-hover:scale-110"

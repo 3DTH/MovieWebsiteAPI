@@ -66,7 +66,7 @@ export default function EditMoviePage({ params }: { params: { id: string } }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     // Check for admin token
     const adminToken = localStorage.getItem("adminToken");
     if (!adminToken) {
@@ -74,20 +74,21 @@ export default function EditMoviePage({ params }: { params: { id: string } }) {
       router.push("/admin/login");
       return;
     }
-  
+
     setIsSubmitting(true);
     try {
       console.log("Updating movie with data:", formData);
       await updateMovie(params.id, formData);
-  
-      if (selectedFile && movie) {  // Add movie check
+
+      if (selectedFile && movie) {
+        // Add movie check
         const uploadFormData = new FormData();
         uploadFormData.append("movieFile", selectedFile);
         // Use movie._id instead of params.id
         const uploadResponse = await uploadMovieFile(movie._id, uploadFormData);
         console.log("Upload response:", uploadResponse.data);
       }
-  
+
       router.push("/admin/movies");
     } catch (error) {
       console.error("Error in handleSubmit:", error);
@@ -114,7 +115,7 @@ export default function EditMoviePage({ params }: { params: { id: string } }) {
       router.push("/admin/movies");
     } catch (error) {
       console.error("Error deleting movie:", error);
-      alert("Có lỗi xảy ra khi xóa phim");  // Add error message
+      alert("Có lỗi xảy ra khi xóa phim"); // Add error message
     } finally {
       setIsSubmitting(false);
     }
@@ -146,7 +147,13 @@ export default function EditMoviePage({ params }: { params: { id: string } }) {
         <div className="md:col-span-1">
           <div className="relative aspect-[2/3] w-full rounded-lg overflow-hidden shadow-lg mb-4">
             <Image
-              src={`https://image.tmdb.org/t/p/w500${movie.posterPath}`}
+              src={
+                movie.posterPath
+                  ? movie.posterPath.startsWith("http") // Check if it's a full URL (Cloudinary)
+                    ? movie.posterPath
+                    : `https://image.tmdb.org/t/p/w500${movie.posterPath}`
+                  : "/images/movie-placeholder.jpg"
+              }
               alt={movie.title}
               fill
               className="object-cover"

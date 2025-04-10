@@ -275,7 +275,9 @@ export default function AdminMoviesPage() {
                               className="h-10 w-10 rounded object-cover"
                               src={
                                 movie.posterPath
-                                  ? `https://image.tmdb.org/t/p/w92${movie.posterPath}`
+                                  ? movie.posterPath.startsWith('http')  // Check if it's a full URL (Cloudinary)
+                                    ? movie.posterPath
+                                    : `https://image.tmdb.org/t/p/w92${movie.posterPath}`
                                   : "/images/movie-placeholder.jpg"
                               }
                               alt={movie.title}

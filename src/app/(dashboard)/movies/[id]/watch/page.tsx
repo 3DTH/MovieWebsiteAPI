@@ -253,7 +253,15 @@ export default function WatchMovie() {
               <div
                 className="w-full h-full opacity-20 blur-xl"
                 style={{
-                  backgroundImage: `url(https://image.tmdb.org/t/p/w1280${movie.backdropPath})`,
+                  backgroundImage: `url(${
+                    movie.backdropPath
+                      ? movie.backdropPath.startsWith("http")
+                        ? movie.backdropPath
+                        : `https://image.tmdb.org/t/p/w1280${movie.backdropPath}`
+                      : movie.posterPath.startsWith("http")
+                      ? movie.posterPath
+                      : `https://image.tmdb.org/t/p/w1280${movie.posterPath}`
+                  })`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                 }}
@@ -501,7 +509,13 @@ export default function WatchMovie() {
                     >
                       <div className="aspect-[2/3] relative">
                         <Image
-                          src={`https://image.tmdb.org/t/p/w500${movie.posterPath}`}
+                          src={
+                            movie.posterPath
+                              ? movie.posterPath.startsWith("http")
+                                ? movie.posterPath
+                                : `https://image.tmdb.org/t/p/w500${movie.posterPath}`
+                              : "/images/movie-placeholder.jpg"
+                          }
                           alt={movie.title}
                           fill
                           className="object-cover"

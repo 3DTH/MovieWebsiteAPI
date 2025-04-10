@@ -323,32 +323,6 @@ const MoviesPage = () => {
     [currentPage, moviesPerPage]
   );
 
-  // Hàm searchMovies để tìm kiếm phim
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setIsSearching(true);
-
-    try {
-      const response = await searchMovies({
-        keyword: searchQuery,
-        page: currentPage,
-        limit: moviesPerPage,
-      });
-
-      if (response.data.success) {
-        setMovies(response.data.data);
-        setFilteredMovies(response.data.data);
-        setTotalPages(response.data.totalPages || 1);
-        setTotalResults(response.data.total || response.data.data.length);
-      }
-    } catch (error) {
-      console.error("Error searching movies:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Add function to handle page changes
   const handlePageChange = (pageNumber: number) => {
     // Only change page if it's different

@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   images: {
     domains: [
       'image.tmdb.org', 
+      'res.cloudinary.com',
       'img.youtube.com', 
     ],
   },

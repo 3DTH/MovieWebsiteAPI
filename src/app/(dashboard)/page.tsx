@@ -23,10 +23,10 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
   // Format date function
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('vi-VN', {
-      day: 'numeric',
-      month: 'numeric',
-      year: 'numeric'
+    return new Intl.DateTimeFormat("vi-VN", {
+      day: "numeric",
+      month: "numeric",
+      year: "numeric",
     }).format(date);
   };
 
@@ -38,14 +38,20 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
     >
       <Link href={`/movies/${movie.tmdbId}`}>
         <div className="relative aspect-[2/3] rounded-lg overflow-hidden">
+          // In the MovieCard component, update the Image src
           <Image
-            src={`https://image.tmdb.org/t/p/w500${movie.posterPath}`}
+            src={
+              movie.posterPath
+                ? movie.posterPath.startsWith("http") // Check if it's a Cloudinary URL
+                  ? movie.posterPath
+                  : `https://image.tmdb.org/t/p/w500${movie.posterPath}`
+                : "/images/movie-placeholder.jpg"
+            }
             alt={movie.title}
             fill
             className="object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
           <div className="absolute inset-0 flex flex-col justify-end p-3 opacity-0 group-hover:opacity-100 transition-opacity">
             <h3 className="text-sm font-medium line-clamp-2">{movie.title}</h3>
 
@@ -82,7 +88,9 @@ export default function Home() {
   const [featuredMovies, setFeaturedMovies] = useState<Movie[]>([]);
   const [popularMovies, setPopularMovies] = useState<Movie[]>([]);
   const [newMovies, setNewMovies] = useState<Movie[]>([]);
-  const [uniqueGenres, setUniqueGenres] = useState<{id: number, name: string}[]>([]);
+  const [uniqueGenres, setUniqueGenres] = useState<
+    { id: number; name: string }[]
+  >([]);
   // Thêm state mới
   const [topRatedMovies, setTopRatedMovies] = useState<Movie[]>([]);
   const [actionMovies, setActionMovies] = useState<Movie[]>([]);
@@ -94,55 +102,59 @@ export default function Home() {
       try {
         setLoading(true);
         const response = await getMovies(1, 50); // Lấy nhiều phim để có dữ liệu lọc
-        
+
         if (response.data.success && response.data.data.length > 0) {
           const allMovies = response.data.data;
-          
+
           // Lọc phim phổ biến
-          const popular = allMovies.filter(movie => movie.isPopular === true);
+          const popular = allMovies.filter((movie) => movie.isPopular === true);
           setPopularMovies(popular.slice(0, 6));
-          
+
           // Lấy 3 phim đầu tiên làm featured movies
           setFeaturedMovies(allMovies.slice(0, 3));
-          
+
           // Lọc phim mới nhất theo ngày phát hành
-          const sortedByDate = [...allMovies].sort((a, b) => 
-            new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
+          const sortedByDate = [...allMovies].sort(
+            (a, b) =>
+              new Date(b.releaseDate).getTime() -
+              new Date(a.releaseDate).getTime()
           );
           setNewMovies(sortedByDate.slice(0, 6));
-          
+
           // Lọc phim theo đánh giá cao nhất
-          const sortedByRating = [...allMovies].sort((a, b) => b.voteAverage - a.voteAverage);
+          const sortedByRating = [...allMovies].sort(
+            (a, b) => b.voteAverage - a.voteAverage
+          );
           setTopRatedMovies(sortedByRating.slice(0, 6));
-          
+
           // Lọc phim theo thể loại hành động (id=28 là Action trong TMDB)
-          const actionGenreMovies = allMovies.filter(movie => 
-            movie.genres.some(genre => genre.id === 28)
+          const actionGenreMovies = allMovies.filter((movie) =>
+            movie.genres.some((genre) => genre.id === 28)
           );
           setActionMovies(actionGenreMovies.slice(0, 6));
-          
+
           // Lọc phim theo thể loại drama (id=18 là Drama trong TMDB)
-          const dramaGenreMovies = allMovies.filter(movie => 
-            movie.genres.some(genre => genre.id === 18)
+          const dramaGenreMovies = allMovies.filter((movie) =>
+            movie.genres.some((genre) => genre.id === 18)
           );
           setDramaMovies(dramaGenreMovies.slice(0, 6));
-          
+
           // Trích xuất tất cả thể loại duy nhất từ các phim
-          const allGenres = allMovies.flatMap(movie => movie.genres);
+          const allGenres = allMovies.flatMap((movie) => movie.genres);
           const uniqueGenresMap = new Map();
-          
-          allGenres.forEach(genre => {
+
+          allGenres.forEach((genre) => {
             if (!uniqueGenresMap.has(genre.id)) {
               uniqueGenresMap.set(genre.id, genre);
             }
           });
-          
+
           // Chuyển Map thành mảng và lấy tối đa 8 thể loại
           const genreArray = Array.from(uniqueGenresMap.values());
           setUniqueGenres(genreArray.slice(0, 8));
         }
       } catch (error) {
-        console.error('Error fetching movies:', error);
+        console.error("Error fetching movies:", error);
       } finally {
         setLoading(false);
       }
@@ -154,7 +166,7 @@ export default function Home() {
   // Auto-slide effect for hero banner
   useEffect(() => {
     if (featuredMovies.length === 0) return;
-    
+
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % featuredMovies.length);
     }, 8000);
@@ -196,7 +208,11 @@ export default function Home() {
               {/* Backdrop Image */}
               <div className="absolute inset-0">
                 <Image
-                  src={`https://image.tmdb.org/t/p/original${movie.backdropPath}`}
+                  src={
+                    movie.backdropPath.startsWith("http") // Check if it's a Cloudinary URL
+                      ? movie.backdropPath
+                      : `https://image.tmdb.org/t/p/original${movie.backdropPath}`
+                  }
                   alt={movie.title}
                   fill
                   priority
@@ -220,14 +236,18 @@ export default function Home() {
                   <div className="flex items-center space-x-4 mb-4">
                     <div className="flex items-center">
                       <FiStar className="text-yellow-500 mr-1" />
-                      <span className="text-white/60">{movie.voteAverage.toFixed(1)}</span>
+                      <span className="text-white/60">
+                        {movie.voteAverage.toFixed(1)}
+                      </span>
                     </div>
                     <span className="text-white/60">•</span>
-                    <span className="text-white/60">{new Intl.DateTimeFormat('vi-VN', {
-                      day: 'numeric',
-                      month: 'numeric', 
-                      year: 'numeric'
-                    }).format(new Date(movie.releaseDate))}</span>
+                    <span className="text-white/60">
+                      {new Intl.DateTimeFormat("vi-VN", {
+                        day: "numeric",
+                        month: "numeric",
+                        year: "numeric",
+                      }).format(new Date(movie.releaseDate))}
+                    </span>
                     <span className="text-white/60">•</span>
                     <div className="flex flex-wrap gap-2">
                       {movie.genres.map((genre) => (
@@ -326,7 +346,7 @@ export default function Home() {
       {/* Thể loại */}
       <section className="py-16 bg-gradient-to-b from-black via-gray-900 to-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: -20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -342,14 +362,15 @@ export default function Home() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
-                  whileHover={{ 
+                  whileHover={{
                     scale: 1.05,
-                    boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+                    boxShadow:
+                      "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
                   }}
                   className="relative h-40 rounded-xl overflow-hidden group cursor-pointer"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-red-600/80 to-gray-900/90 group-hover:from-red-500/90 group-hover:to-gray-800/95 transition-all duration-300" />
-                  
+
                   {/* Genre Icon - You can add different icons for different genres */}
                   <div className="absolute top-4 right-4 text-white/80 group-hover:text-white transition-colors duration-300">
                     <motion.div
@@ -358,20 +379,30 @@ export default function Home() {
                       className="w-8 h-8"
                     >
                       {/* You can add genre-specific icons here */}
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"
+                        />
                       </svg>
                     </motion.div>
                   </div>
-                  
+
                   <div className="absolute inset-0 flex flex-col justify-end p-6">
-                    <motion.h3 
+                    <motion.h3
                       whileHover={{ scale: 1.05 }}
                       className="text-xl md:text-2xl font-bold text-white group-hover:text-red-400 transition-colors duration-300"
                     >
                       {genre.name}
                     </motion.h3>
-                    
+
                     <motion.div
                       initial={{ width: "0%" }}
                       whileHover={{ width: "100%" }}
@@ -495,18 +526,28 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredMovies.slice(0, 3).map((movie) => (
               <Link key={movie._id} href={`/movies/${movie.tmdbId}`}>
-                <motion.div 
+                <motion.div
                   whileHover={{ scale: 1.03 }}
                   className="relative h-64 rounded-xl overflow-hidden group"
                 >
                   <Image
-                    src={`https://image.tmdb.org/t/p/w500${movie.backdropPath || movie.posterPath}`}
+                    src={
+                      movie.backdropPath || movie.posterPath
+                        ? (movie.backdropPath || movie.posterPath).startsWith(
+                            "http"
+                          )
+                          ? movie.backdropPath || movie.posterPath
+                          : `https://image.tmdb.org/t/p/w500${
+                              movie.backdropPath || movie.posterPath
+                            }`
+                        : "/images/movie-placeholder.jpg"
+                    }
                     alt={movie.title}
                     fill
                     className="object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
-                  
+
                   <div className="absolute bottom-0 left-0 right-0 p-4">
                     <h3 className="text-xl font-bold text-white group-hover:text-red-400 transition-colors">
                       {movie.title}
@@ -516,10 +557,12 @@ export default function Home() {
                     </p>
                     <div className="flex items-center mt-2">
                       <FiStar className="text-yellow-500 mr-1" />
-                      <span className="text-white">{movie.voteAverage.toFixed(1)}</span>
+                      <span className="text-white">
+                        {movie.voteAverage.toFixed(1)}
+                      </span>
                     </div>
                   </div>
-                  
+
                   <div className="absolute top-3 right-3 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-md">
                     HOT
                   </div>
@@ -572,8 +615,8 @@ export default function Home() {
                 Tải ứng dụng 3DFlix
               </h2>
               <p className="text-gray-300 mb-6">
-                Tải ứng dụng 3DFlix để xem phim mọi lúc mọi nơi. Có sẵn trên
-                iOS và Android.
+                Tải ứng dụng 3DFlix để xem phim mọi lúc mọi nơi. Có sẵn trên iOS
+                và Android.
               </p>
               <div className="flex flex-wrap gap-4">
                 <motion.a
